@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-build/
+client/*.jar
+.test-game/
+.test-data*/
+.test-game-run.log
+*.log

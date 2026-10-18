@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'">
+<title>Vanilla++</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="loader.css">
+</head>
+<body class="app">
+
+<!-- icons: Material shapes, filled, drawn in the accent like the client's -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></symbol>
+    <symbol id="i-tune" viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></symbol>
+    <symbol id="i-log" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.6v12.8c0 .8.88 1.28 1.55.84l9.8-6.4a1 1 0 0 0 0-1.68l-9.8-6.4C8.88 4.32 8 4.8 8 5.6z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></symbol>
+    <symbol id="i-memory" viewBox="0 0 24 24"><path d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"/></symbol>
+    <symbol id="i-java" viewBox="0 0 24 24"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.9 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5S15.67 6 16.5 6s1.5.67 1.5 1.5S17.33 9 16.5 9z"/></symbol>
+    <symbol id="i-news" viewBox="0 0 24 24"><path d="M12 2l2.4 5.9L20.5 8.5l-4.6 4.1L17.2 19 12 15.8 6.8 19l1.3-6.4L3.5 8.5l6.1-.6z"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7 1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91 1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></symbol>
+    <symbol id="i-account" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm0 14.2a7.2 7.2 0 0 1-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 0 1-6 3.22z"/></symbol>
+    <symbol id="i-group" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-crown" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><path d="M12.65 10A6 6 0 1 0 12.65 14H17v4h4v-4h2v-4H12.65zM7 14a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></symbol>
+  </defs>
+</svg>
+
+<div class="stage">
+  <div class="window" id="win">
+
+    <!-- the menu's panorama (or a picture of one's own over it), what drifts through the air, and the shade that carries the text -->
+    <div class="backdrop">
+      <canvas id="pano"></canvas>
+      <div class="world" id="world"></div>
+      <canvas id="petals"></canvas>
+      <div class="shade"></div>
+      <div class="shade deep"></div>
+    </div>
+
+    <div class="titlebar">
+      <span class="proto" id="appVersion">Vanilla++</span>
+      <div class="controls">
+        <button class="ctl" data-act="min" title="Свернуть"><svg><use href="#i-minus"/></svg></button>
+        <button class="ctl close" data-act="close" title="Закрыть"><svg><use href="#i-close"/></svg></button>
+      </div>
+    </div>
+
+    <!-- ================================================================ sidebar -->
+    <aside class="sidebar glass enter" style="--i:0">
+      <div class="brand">
+        <div class="logo"></div>
+      </div>
+      <div class="hair"></div>
+
+      <div class="group">Лоадер</div>
+      <nav class="nav-list" id="nav">
+        <div class="nav-wash" id="navWash"></div>
+        <button class="nav on" data-page="home"><svg class="ic"><use href="#i-home"/></svg><span>Главная</span></button>
+        <button class="nav" data-page="mods"><svg class="ic"><use href="#i-puzzle"/></svg><span>Моды</span><em class="count" id="navMods" title="Включено">0</em></button>
+        <button class="nav" data-page="packs"><svg class="ic"><use href="#i-layers"/></svg><span>Ресурспаки</span><em class="count" id="navPacks" title="Включено">0</em></button>
+        <button class="nav" data-page="shaders"><svg class="ic"><use href="#i-sun"/></svg><span>Шейдеры</span><em class="count" id="navShaders" title="Включено">0</em></button>
+        <button class="nav" data-page="accounts"><svg class="ic"><use href="#i-user"/></svg><span>Аккаунты</span></button>
+        <button class="nav" data-page="settings"><svg class="ic"><use href="#i-tune"/></svg><span>Настройки</span></button>
+      </nav>
+
+      <div class="group">Прочее</div>
+      <button class="nav" data-act="folder"><svg class="ic"><use href="#i-folder"/></svg><span>Папка игры</span></button>
+      <button class="nav" data-act="logs"><svg class="ic"><use href="#i-log"/></svg><span>Логи</span></button>
+
+      <div class="grow"></div>
+      <div class="hair"></div>
+      <button class="profile" id="sideProfile" data-page="accounts" title="Аккаунт">
+        <span class="side-avatar" id="sideAvatar"></span>
+        <span class="who"><b id="sideName">-</b><small id="sideSub">Vanilla++ · 26.2</small></span>
+      </button>
+    </aside>
+
+    <main class="content">
+
+      <!-- ============================================================ home -->
+      <section class="page home on" data-page="home">
+        <div class="hero">
+          <div class="caps st" style="--i:1">Рад видеть, <span data-nick-upper></span></div>
+          <h1 class="st" style="--i:2">Всё готово -<br>запускаем Vanilla++?</h1>
+          <p class="body st" style="--i:3"><span data-stack>Minecraft 26.2</span> · <span data-mods-text>0 модов</span></p>
+
+          <div class="play-row st" style="--i:4">
+            <button class="btn primary play" id="play">
+              <span class="fill" id="playFill"></span>
+              <svg class="ic"><use href="#i-play" id="playIcon"/></svg>
+              <span class="lbl" id="playLabel">Играть</span>
+              <span class="pct" id="playPct"></span>
+            </button>
+            <button class="btn glass sq" data-page="settings" title="Настройки запуска"><svg class="ic"><use href="#i-tune"/></svg></button>
+          </div>
+          <div class="launch-line st" style="--i:5" id="launchLine">
+            <span id="launchText"></span>
+          </div>
+
+          <div class="readouts st" style="--i:6">
+            <button class="chip glass" data-page="settings" data-focus="ram"><svg class="ic"><use href="#i-memory"/></svg><span data-ram-text>-</span></button>
+            <button class="chip glass" data-page="mods"><svg class="ic"><use href="#i-puzzle"/></svg><span data-mods-text>0 модов</span></button>
+            <button class="chip glass" data-page="accounts"><span class="face round" data-face style="--s:16px"></span><span data-nick>-</span></button>
+          </div>
+        </div>
+
+        <div class="cards">
+          <div class="card glass st" style="--i:3">
+            <div class="card-head"><svg class="ic"><use href="#i-news"/></svg><span id="newsTitle">Что нового</span><em id="newsTag"></em></div>
+            <ul class="news" id="news"></ul>
+          </div>
+          <div class="card glass st" style="--i:4">
+            <div class="card-head"><svg class="ic"><use href="#i-server"/></svg><span>Быстрый вход</span><em>сразу на сервер</em>
+              <button class="icon-btn tiny" id="serverAddOpen" title="Добавить сервер"><svg><use href="#i-plus"/></svg></button></div>
+            <div class="server-form" id="serverForm">
+              <label class="well"><input id="serverAddress" placeholder="Адрес, например mc.funtime.su" spellcheck="false" autocomplete="off"></label>
+              <button class="btn wash small" id="serverAdd">Добавить</button>
+            </div>
+            <div class="servers" id="servers"></div>
+          </div>
+        </div>
+
+        <footer class="fine st" style="--i:7">
+          Vanilla++ не связан с Mojang и Ely.by.<br>Не является официальным продуктом Minecraft.
+          <b data-footer>Vanilla++ · Minecraft 26.2</b>
+        </footer>
+      </section>
+
+      <!-- ============================================================ mods -->
+      <section class="page pane glass" data-page="mods">
+        <header class="pane-head">
+          <svg class="ic"><use href="#i-puzzle"/></svg><span>Моды</span>
+        </header>
+        <div class="source-bar">
+          <div class="segmented" id="modSource">
+            <span class="seg-wash"></span>
+            <button data-v="installed" class="on">Установленные</button>
+            <button data-v="modrinth">Modrinth</button>
+            <button data-v="curseforge">CurseForge</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label class="well search">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input id="modSearch" placeholder="Поиск по модам" autocomplete="off" spellcheck="false">
+          </label>
+          <button class="btn wash only-local" id="modAdd"><svg class="ic"><use href="#i-plus"/></svg>Добавить мод</button>
+          <button class="btn wash only-local" data-act="folder-mods"><svg class="ic"><use href="#i-folder"/></svg>Папка</button>
+        </div>
+        <div class="hint only-local"><svg class="ic"><use href="#i-download"/></svg>Можно просто перетащить .jar в окно лоадера</div>
+        <div class="hint only-remote"><svg class="ic"><use href="#i-download"/></svg><span id="modRemoteHint"></span></div>
+        <div class="scroll" id="modList"></div>
+        <div class="status" data-status></div>
+      </section>
+
+      <!-- ============================================================ resource packs -->
+      <section class="page pane glass" data-page="packs">
+        <header class="pane-head">
+          <svg class="ic"><use href="#i-layers"/></svg><span>Ресурспаки</span>
+        </header>
+        <div class="source-bar">
+          <div class="segmented" id="packSource">
+            <span class="seg-wash"></span>
+            <button data-v="installed" class="on">Установленные</button>
+            <button data-v="modrinth">Modrinth</button>
+            <button data-v="curseforge">CurseForge</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label class="well search">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input id="packSearch" placeholder="Поиск по ресурспакам" autocomplete="off" spellcheck="false">
+          </label>
+          <button class="btn wash only-local" id="packAdd"><svg class="ic"><use href="#i-plus"/></svg>Добавить</button>
+          <button class="btn wash only-local" data-act="folder-packs"><svg class="ic"><use href="#i-folder"/></svg>Папка</button>
+        </div>
+        <div class="hint only-local"><svg class="ic"><use href="#i-download"/></svg>Включается в игре само. Можно перетащить .zip в окно</div>
+        <div class="hint only-remote"><svg class="ic"><use href="#i-download"/></svg><span id="packRemoteHint"></span></div>
+        <div class="scroll" id="packList"></div>
+        <div class="status" data-status></div>
+      </section>
+
+      <!-- ============================================================ shaders -->
+      <section class="page pane glass" data-page="shaders">
+        <header class="pane-head">
+          <svg class="ic"><use href="#i-sun"/></svg><span>Шейдеры</span>
+        </header>
+        <div class="source-bar">
+          <div class="segmented" id="shaderSource">
+            <span class="seg-wash"></span>
+            <button data-v="installed" class="on">Установленные</button>
+            <button data-v="modrinth">Modrinth</button>
+            <button data-v="curseforge">CurseForge</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label class="well search">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input id="shaderSearch" placeholder="Поиск по шейдерам" autocomplete="off" spellcheck="false">
+          </label>
+          <button class="btn wash only-local" id="shaderAdd"><svg class="ic"><use href="#i-plus"/></svg>Добавить</button>
+          <button class="btn wash only-local" data-act="folder-shaders"><svg class="ic"><use href="#i-folder"/></svg>Папка</button>
+        </div>
+        <div class="hint only-local"><svg class="ic"><use href="#i-download"/></svg>Работают через Iris. Если мода нет, лаунчер поставит его сам</div>
+        <div class="hint only-remote"><svg class="ic"><use href="#i-download"/></svg><span id="shaderRemoteHint"></span></div>
+        <div class="scroll" id="shaderList"></div>
+        <div class="status" data-status></div>
+      </section>
+
+      <!-- ============================================================ accounts -->
+      <section class="page pane glass" data-page="accounts">
+        <header class="pane-head">
+          <svg class="ic"><use href="#i-user"/></svg><span>Аккаунты</span>
+        </header>
+        <div class="scroll">
+          <div class="current st" style="--i:1">
+            <div class="current-face">
+              <span class="face" data-face style="--s:58px"></span>
+              <span class="badge" id="currentBadge"><svg><use href="#i-check"/></svg></span>
+            </div>
+            <div class="current-text">
+              <div class="caps">Текущий аккаунт</div>
+              <div class="current-nick" data-nick>-</div>
+              <div class="current-sub" id="currentKind">Добавьте аккаунт, чтобы играть</div>
+            </div>
+            <button class="btn wash small" id="copyUuid" title="UUID, под которым вас видит сервер"><svg class="ic"><use href="#i-copy"/></svg><span id="uuidShort">UUID</span></button>
+          </div>
+
+          <div class="segmented acc-kind st" style="--i:2" id="accKind">
+            <div class="seg-wash"></div>
+            <button data-v="offline" class="on">Офлайн</button>
+            <button data-v="ely">Ely.by</button>
+            <button data-v="microsoft">Microsoft</button>
+          </div>
+
+          <div class="acc-panel on" data-kind="offline">
+            <div class="add-row st" style="--i:3">
+              <label class="well nick">
+                <span class="face" id="previewFace" style="--s:20px"></span>
+                <input id="nickInput" placeholder="Ник для нового аккаунта" maxlength="16" autocomplete="off" spellcheck="false">
+              </label>
+              <button class="btn wash" id="nickRandom"><svg class="ic"><use href="#i-dice"/></svg>Случайный</button>
+              <button class="btn wash" id="nickAdd"><svg class="ic"><use href="#i-plus"/></svg>Добавить</button>
+            </div>
+          </div>
+
+          <div class="acc-panel" data-kind="ely">
+            <div class="add-row st" style="--i:3">
+              <label class="well"><svg class="ic"><use href="#i-user"/></svg><input id="elyUser" placeholder="Ник или почта Ely.by" maxlength="64" autocomplete="username" spellcheck="false"></label>
+              <label class="well"><svg class="ic"><use href="#i-lock"/></svg><input id="elyPass" type="password" placeholder="Пароль" maxlength="128" autocomplete="current-password"></label>
+              <button class="btn wash" id="elyGo"><svg class="ic"><use href="#i-check"/></svg>Войти</button>
+            </div>
+          </div>
+
+          <div class="acc-panel" data-kind="microsoft">
+            <div class="add-row st" style="--i:3">
+              <button class="btn wash" id="msGo"><svg class="ic"><use href="#i-account"/></svg><span id="msGoLabel">Войти через Microsoft</span></button>
+            </div>
+            <div class="device" id="msBox" hidden>
+              <div class="device-code" id="msCode">Ждём код…</div>
+              <div class="device-sub">Введите код на <span id="msLink">microsoft.com/link</span> - браузер уже открыт</div>
+            </div>
+          </div>
+
+          <div class="nick-hint st" style="--i:3" id="nickHint">3-16 символов: латинские буквы, цифры и _</div>
+
+          <div class="group-label st" style="--i:4">Сохранённые · <span id="accCount">0</span></div>
+          <div id="accList"></div>
+        </div>
+        <div class="status" data-status></div>
+      </section>
+
+      <!-- ============================================================ settings -->
+      <section class="page pane glass" data-page="settings">
+        <header class="pane-head">
+          <svg class="ic"><use href="#i-tune"/></svg><span>Настройки</span>
+        </header>
+        <div class="scroll">
+          <div class="columns">
+            <div class="col">
+              <div class="group-label st" style="--i:1">Память</div>
+              <div class="ram st" style="--i:2" id="ramBlock">
+                <div class="ram-top">
+                  <span class="set-name">Выделенная память</span>
+                  <span class="ram-value"><b id="ramValue">4.0</b> ГБ</span>
+                </div>
+                <div class="slider" id="ramSlider">
+                  <div class="zone" id="ramZone"><span>рекомендуется</span></div>
+                  <div class="track"></div>
+                  <div class="reserved" id="ramReserved" title="Остаётся Windows"></div>
+                  <div class="track-fill" id="ramFill"></div>
+                  <div class="thumb" id="ramThumb"></div>
+                </div>
+                <div class="ticks" id="ramTicks"></div>
+                <div class="presets" id="ramPresets"></div>
+                <div class="ram-info" id="ramInfo"></div>
+              </div>
+
+              <div class="group-label st" style="--i:3">Java</div>
+              <div class="set st" style="--i:4">
+                <div><div class="set-name">Встроенная Java 25</div><div class="set-sub">Сборка Mojang, лоадер скачает её сам</div></div>
+                <button class="switch on" data-key="bundledJava"></button>
+              </div>
+              <div class="set collapsible st" style="--i:5" id="javaPathRow">
+                <div class="set-col">
+                  <div class="set-name">Путь к Java</div>
+                  <div class="inline">
+                    <label class="well"><input id="javaPath" placeholder="C:\Program Files\Java\jdk-25\bin\javaw.exe" spellcheck="false"></label>
+                    <button class="btn wash small" id="javaPick">Обзор</button>
+                  </div>
+                </div>
+              </div>
+              <div class="set st" style="--i:6">
+                <div class="set-col">
+                  <div class="set-name">Аргументы JVM</div>
+                  <label class="well mono"><input id="jvmArgs" placeholder="-XX:+UseZGC -XX:+ZGenerational" spellcheck="false"></label>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="col">
+              <div class="group-label st" style="--i:1">Внешний вид</div>
+              <div class="set st" style="--i:2">
+                <div class="set-col">
+                  <div class="set-name">Цвет <span class="set-sub inline-sub" id="themeName">Сакура</span></div>
+                  <div class="swatches" id="swatches"></div>
+                  <label class="color-pick">Свой<input type="color" id="accentColor" value="#f4a8be" aria-label="Свой цвет"></label>
+                </div>
+              </div>
+              <div class="set st" style="--i:2">
+                <div class="set-col">
+                  <div class="set-name">Шрифт <span class="set-sub inline-sub" id="fontName">Noto Sans</span></div>
+                  <div class="font-picks" id="fontPicks"></div>
+                </div>
+              </div>
+              <div class="set st" style="--i:3">
+                <div class="set-col">
+                  <div class="set-name">Фон <span class="set-sub inline-sub" id="bgName">Сакура</span></div>
+                  <div class="backgrounds" id="backgrounds">
+                    <button class="bg-thumb bg-sakura" data-bg="sakura" title="Сакура"></button>
+                    <button class="bg-thumb bg-end" data-bg="end" title="Энд"></button>
+                    <button class="bg-thumb custom" data-bg="custom" title="Своя картинка" hidden></button>
+                    <button class="bg-thumb add" id="bgAdd" title="Выбрать картинку"><svg class="ic"><use href="#i-plus"/></svg><span>Своя</span></button>
+                  </div>
+                </div>
+              </div>
+              <div class="set st" style="--i:4">
+                <div><div class="set-name">Частицы</div><div class="set-sub">Лепестки у сакуры, пыль у Энда</div></div>
+                <button class="switch on" data-key="petals"></button>
+              </div>
+
+              <div class="group-label st" style="--i:5">Игра</div>
+              <div class="set st" style="--i:3">
+                <div><div class="set-name">Размер окна</div><div class="set-sub">Когда игра не на весь экран</div></div>
+                <div class="inline res">
+                  <label class="well tiny"><input id="resW" value="1280" inputmode="numeric" maxlength="4"></label>
+                  <span class="times">×</span>
+                  <label class="well tiny"><input id="resH" value="720" inputmode="numeric" maxlength="4"></label>
+                </div>
+              </div>
+              <div class="set st" style="--i:4">
+                <div><div class="set-name">Полноэкранный режим</div><div class="set-sub">Сразу при запуске</div></div>
+                <button class="switch" data-key="fullscreen"></button>
+              </div>
+              <div class="set st" style="--i:5">
+                <div class="set-col">
+                  <div class="set-name">Папка игры</div>
+                  <div class="inline">
+                    <label class="well"><input id="gameDir" readonly></label>
+                    <button class="btn wash small" data-act="folder" title="Открыть"><svg class="ic"><use href="#i-folder"/></svg></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="group-label st" style="--i:6">Лоадер</div>
+              <div class="set st" style="--i:7">
+                <div class="set-col">
+                  <div class="set-name">После запуска игры</div>
+                  <div class="segmented" id="afterLaunch">
+                    <div class="seg-wash"></div>
+                    <button data-v="hide" class="on">Свернуть</button>
+                    <button data-v="close">Закрыть</button>
+                    <button data-v="stay">Оставить</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="status" data-status></div>
+      </section>
+    </main>
+
+    <div class="preview glass" id="preview" hidden>
+      <header class="preview-head">
+        <span class="row-icon web" id="previewIcon"></span>
+        <div class="preview-id">
+          <div class="preview-name" id="previewName"></div>
+          <div class="preview-sub" id="previewSub"></div>
+        </div>
+        <button class="icon-btn" id="previewClose" title="Закрыть"><svg><use href="#i-close"/></svg></button>
+      </header>
+      <p class="preview-text" id="previewText"></p>
+      <div class="preview-shots" id="previewShots"></div>
+      <div class="preview-label">Версия для Minecraft <span id="previewMc"></span></div>
+      <div class="preview-versions" id="previewVersions"></div>
+      <div class="preview-bar">
+        <button class="btn primary" id="previewInstall">Скачать выбранную версию</button>
+      </div>
+    </div>
+
+    <!-- what dragging a file over the window shows -->
+    <div class="drop" id="drop">
+      <div class="drop-card">
+        <div class="drop-icon"><svg><use href="#i-plus"/></svg></div>
+        <div class="drop-title" id="dropTitle">Отпустите, чтобы добавить мод</div>
+        <div class="drop-sub" id="dropSub">Файлы .jar для Fabric · Minecraft 26.2</div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"><span class="chip-ic"><svg><use href="#i-check"/></svg></span><span class="toast-text"></span></div>
+  </div>
+</div>
+
+<script src="loader.js"></script>
+</body>
+</html>

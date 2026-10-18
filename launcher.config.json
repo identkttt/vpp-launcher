@@ -1,0 +1,37 @@
+{
+  "minecraft": "26.2",
+  "fabricLoader": "0.19.5",
+  "fabricApi": "0.161.0+26.2",
+  "gameDirName": ".vanilla-plus",
+  "client": {
+    "name": "Vanilla++"
+  },
+  "news": {
+    "title": "Что нового",
+    "tag": "1.1.1",
+    "items": [
+      [
+        "Аккаунты",
+        "офлайн, Ely.by и Microsoft - без отдельной регистрации"
+      ],
+      [
+        "Ваниль",
+        "лаунчер для обычного сервера Minecraft"
+      ],
+      [
+        "Сакура",
+        "цвет и шрифт меняются в настройках"
+      ]
+    ]
+  },
+  "servers": [
+    {
+      "name": "FunTime",
+      "address": "mc.funtime.su"
+    },
+    {
+      "name": "Hypixel",
+      "address": "mc.hypixel.net"
+    }
+  ]
+}
