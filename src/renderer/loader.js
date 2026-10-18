@@ -1572,18 +1572,35 @@
   $('#elyPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('#elyGo').click(); });
 
   let msBusy = false;
+  let msUserCode = '';
+
+  function copyMsCode() {
+    const code = msUserCode || ($('#msCode').textContent || '').trim();
+    if (!code || code === 'Ждём код…') return;
+    navigator.clipboard?.writeText(code).catch(() => {});
+    status('accounts', 'copy', `Код скопирован: ${code}`);
+  }
+
+  $('#msCode').addEventListener('click', copyMsCode);
+
   $('#msGo').addEventListener('click', async () => {
     if (msBusy) {
       await api.auth.microsoftCancel().catch(() => {});
       return;
     }
     msBusy = true;
+    msUserCode = '';
     $('#msGoLabel').textContent = 'Отмена';
     $('#msBox').hidden = true;
+    $('#msCode').disabled = true;
+    $('#msCode').textContent = 'Ждём код…';
     const off = api.auth.onDevice(info => {
+      msUserCode = (info.userCode || '').trim();
       $('#msBox').hidden = false;
-      $('#msCode').textContent = info.userCode || '';
+      $('#msCode').textContent = msUserCode || 'Ждём код…';
+      $('#msCode').disabled = !msUserCode;
       $('#msLink').textContent = (info.verificationUri || 'https://www.microsoft.com/link').replace(/^https?:\/\//, '');
+      if (msUserCode) copyMsCode();
     });
     try {
       const account = await api.auth.microsoft();
@@ -1596,6 +1613,7 @@
     } finally {
       off();
       msBusy = false;
+      msUserCode = '';
       $('#msGoLabel').textContent = 'Войти через Microsoft';
     }
   });

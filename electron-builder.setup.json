@@ -1,0 +1,39 @@
+{
+  "appId": "dev.vanilla.plus.setup",
+  "productName": "Vanilla++ Setup",
+  "copyright": "Vanilla++",
+  "directories": {
+    "output": "dist-release",
+    "buildResources": "build"
+  },
+  "extraMetadata": {
+    "main": "src/setup/main.js",
+    "name": "vanilla-plus-setup",
+    "productName": "Vanilla++ Setup"
+  },
+  "files": [
+    "src/setup/**/*",
+    "src/renderer/fonts.css",
+    "src/renderer/fonts/**/*",
+    "src/renderer/assets/logo.png",
+    "src/setup/assets/backdrop.jpg",
+    "build/icon.png",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "build/payload.zip",
+      "to": "payload.zip"
+    }
+  ],
+  "win": {
+    "icon": "build/icon.png",
+    "target": [
+      "portable"
+    ],
+    "artifactName": "VanillaPlus-${version}-x64.${ext}"
+  },
+  "portable": {
+    "artifactName": "VanillaPlus-${version}-x64.${ext}"
+  }
+}

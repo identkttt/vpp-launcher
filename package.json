@@ -5,11 +5,13 @@
   "description": "Лаунчер Vanilla++ для ванильного Minecraft",
   "main": "src/main/main.js",
   "private": true,
+  "author": "Vanilla++",
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
+    "setup": "electron src/setup/main.js",
     "icon": "java scripts/MakeIcon.java",
-    "dist": "electron-builder --win nsis portable",
+    "dist": "node scripts/dist.js",
     "dist:dir": "electron-builder --win --dir",
     "test:install": "node scripts/test-install.js"
   },
@@ -22,7 +24,8 @@
       "buildResources": "build"
     },
     "files": [
-      "src/**/*",
+      "src/main/**/*",
+      "src/renderer/**/*",
       "build/icon.png",
       "package.json",
       "launcher.config.json"
@@ -30,15 +33,8 @@
     "win": {
       "icon": "build/icon.png",
       "target": [
-        "nsis",
         "portable"
       ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "shortcutName": "Vanilla++"
     },
     "portable": {
       "artifactName": "VanillaPlus-${version}-portable.${ext}"

@@ -696,9 +696,16 @@ svg.ic, .ic svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
   background: rgb(255 255 255 / .05);
 }
 .device-code {
+  display: block; width: 100%; margin: 0; padding: 4px 0;
+  border: 0; background: transparent; text-align: left; cursor: pointer;
   font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   font-size: 22px; letter-spacing: .14em; color: var(--bright);
+  transition: color .15s, opacity .15s;
 }
+.device-code:hover { color: rgb(var(--accent)); }
+.device-code:active { opacity: .75; }
+.device-code:disabled { cursor: default; opacity: .7; }
+.device-code:disabled:hover { color: var(--bright); }
 .device-sub { margin-top: 4px; font-size: 12px; color: var(--soft); }
 .swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .swatch {

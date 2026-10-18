@@ -1,6 +1,9 @@
 node_modules/
 dist/
+dist-app/
 dist-build/
+dist-release/
+build/payload.zip
 client/*.jar
 .test-game/
 .test-data*/
