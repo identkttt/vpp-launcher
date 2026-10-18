@@ -6,3 +6,6 @@ client/*.jar
 .test-data*/
 .test-game-run.log
 *.log
+
+dist/
+node_modules/

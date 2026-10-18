@@ -11,6 +11,7 @@
     "icon": "java scripts/MakeIcon.java",
     "dist": "electron-builder --win nsis portable",
     "dist:dir": "electron-builder --win --dir",
+    "build:mac": "electron-builder --mac pkg",
     "test:install": "node scripts/test-install.js"
   },
   "build": {
