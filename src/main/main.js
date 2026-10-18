@@ -11,6 +11,7 @@ const system = require('./system');
 const mods = require('./mods');
 const packs = require('./packs');
 const catalog = require('./catalog');
+const mrpack = require('./mrpack');
 const game = require('./game');
 const { ping } = require('./ping');
 const auth = require('./auth');
@@ -176,11 +177,21 @@ async function init() {
   }
   if (skinsChanged) settings.update({ accounts });
   const view = skinsChanged ? settings.get() : s;
+  const root = gameRoot();
+  const packState = await mrpack.loadState(root);
+  const packConfig = mrpack.effectiveConfig(config, packState);
+  let pack = { enabled: false };
+  try {
+    pack = await mrpack.status(root, config);
+  } catch {
+    pack = { enabled: !!mrpack.projectId(config), error: 'Не удалось проверить сборку' };
+  }
   return {
     version: VERSION,
-    config,
+    config: packConfig,
     settings: view,
-    gameRoot: gameRoot(),
+    gameRoot: root,
+    pack,
     memory: await system.memory({ wait: false }),
     background: s.customBackground && await exists(s.customBackground.file)
       ? { url: pathToFileURL(s.customBackground.file).href, name: s.customBackground.name } : null,
@@ -206,11 +217,37 @@ async function launch(server) {
       send('game:progress', { stage: 'meta', text: 'Проверяем сессию аккаунта' });
       account = rememberAccount(await auth.freshen(account));
     }
+
+    let launchConfig = config;
+    if (mrpack.projectId(config)) {
+      const synced = await mrpack.sync(root, config, {
+        signal: abort.signal,
+        report: p => send('game:progress', p),
+      });
+      launchConfig = synced.config || config;
+      send('pack:status', {
+        enabled: true,
+        project: mrpack.projectId(config),
+        local: { versionId: synced.versionId, versionNumber: synced.versionNumber },
+        remote: { versionId: synced.versionId, versionNumber: synced.versionNumber },
+        upToDate: true,
+        updated: synced.updated,
+        dependencies: synced.state?.dependencies || {},
+        minecraft: launchConfig.minecraft,
+        fabricLoader: launchConfig.fabricLoader,
+      });
+    } else {
+      launchConfig = mrpack.effectiveConfig(config, await mrpack.loadState(root));
+    }
+
     const prepared = await game.prepare({
-      root, config, settings: s, account, signal: abort.signal,
+      root, config: launchConfig, settings: s, account, signal: abort.signal,
       report: p => send('game:progress', p),
     });
-    send('game:progress', { stage: 'launch', text: server ? `Подключение к ${server}` : `Запуск Minecraft ${config.minecraft}` });
+    send('game:progress', {
+      stage: 'launch',
+      text: server ? `Подключение к ${server}` : `Запуск Minecraft ${launchConfig.minecraft}`,
+    });
     const outputFile = path.join(root, 'launcher', 'game-output.log');
     await fsp.mkdir(path.dirname(outputFile), { recursive: true });
     const out = fs.openSync(outputFile, 'w');
@@ -540,9 +577,12 @@ function registerIpc() {
   handle('init', init);
   handle('settings:update', patch => settings.update(patch));
   handle('system:memory', () => system.memory());
-  handle('mods:list', () => mods.list(gameRoot(), config.minecraft));
+  async function liveConfig() {
+    return mrpack.effectiveConfig(config, await mrpack.loadState(gameRoot()));
+  }
+  handle('mods:list', async () => mods.list(gameRoot(), (await liveConfig()).minecraft));
   handle('mods:builtin', builtinMods);
-  handle('mods:add', files => mods.add(gameRoot(), config.minecraft, files));
+  handle('mods:add', async files => mods.add(gameRoot(), (await liveConfig()).minecraft, files));
   handle('mods:toggle', (file, on) => mods.setEnabled(gameRoot(), file, on));
   handle('mods:remove', file => mods.remove(gameRoot(), file));
   handle('mods:restore', token => mods.restore(gameRoot(), token));
@@ -551,13 +591,14 @@ function registerIpc() {
   handle('packs:toggle', (kind, file, on) => packs.setOn(gameRoot(), kind, file, on));
   handle('packs:remove', (kind, file) => packs.remove(gameRoot(), kind, file));
   handle('packs:restore', (kind, token) => packs.restore(gameRoot(), kind, token));
-  handle('catalog:search', (source, kind, query) => catalog.search({
-    root: gameRoot(), source, kind, query, mc: config.minecraft,
+  handle('catalog:search', async (source, kind, query) => catalog.search({
+    root: gameRoot(), source, kind, query, mc: (await liveConfig()).minecraft,
   }));
-  handle('catalog:project', (source, kind, projectId) => catalog.project({
-    source, kind, projectId, mc: config.minecraft,
+  handle('catalog:project', async (source, kind, projectId) => catalog.project({
+    source, kind, projectId, mc: (await liveConfig()).minecraft,
   }));
   handle('catalog:install', (source, kind, projectId, versionId) => installCatalog(source, kind, projectId, versionId));
+  handle('pack:status', () => mrpack.status(gameRoot(), config));
   handle('game:launch', server => launch(server));
   handle('game:cancel', () => session.abort?.abort());
   handle('game:stop', stopGame);

@@ -38,6 +38,10 @@ contextBridge.exposeInMainWorld('vanilla', {
     project: (source, kind, projectId) => call('catalog:project', source, kind, projectId),
     install: (source, kind, projectId, versionId) => call('catalog:install', source, kind, projectId, versionId),
   },
+  pack: {
+    status: () => call('pack:status'),
+    onStatus: fn => on('pack:status', fn),
+  },
   game: {
     launch: server => call('game:launch', server),
     cancel: () => call('game:cancel'),

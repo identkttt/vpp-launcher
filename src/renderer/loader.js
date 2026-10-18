@@ -2159,12 +2159,22 @@
   function progress(p) {
     if (phase !== 'busy') return;
     let pct = null, text = p.text;
-    if (p.stage === 'meta') pct = 3;
+    if (p.stage === 'pack') {
+      playLabel.textContent = 'Сборка…';
+      if (p.total) {
+        pct = 2 + 16 * Math.min(1, (p.done || 0) / p.total);
+        if (/мод/i.test(p.text || '')) {
+          text = p.text;
+        } else if (p.done != null) {
+          text = `${p.text || 'Сборка'} · ${fmtBytes(p.done)}${p.total ? ` из ${fmtBytes(p.total)}` : ''}`;
+        }
+      } else pct = 6;
+    } else if (p.stage === 'meta') pct = 20;
     else if (p.stage === 'check' && p.total) {
-      pct = 4 + 14 * p.done / p.total;
+      pct = 22 + 10 * p.done / p.total;
       text = `Проверка файлов · ${p.done} из ${p.total}`;
     } else if (p.stage === 'download' && p.total) {
-      pct = 18 + 80 * Math.min(1, p.done / p.total);
+      pct = 32 + 66 * Math.min(1, p.done / p.total);
       const now = performance.now();
       if (!speed) speed = { at: now, done: p.done, rate: 0 };
       else if (now - speed.at > 700) {
@@ -2248,6 +2258,26 @@
 
   // ------------------------------------------------------------------ the loader's own name and what it runs
 
+  function showPack(pack) {
+    const line = $('#packLine');
+    if (!line) return;
+    if (!pack?.enabled) {
+      line.hidden = true;
+      line.textContent = '';
+      return;
+    }
+    line.hidden = false;
+    const ver = pack.local?.versionNumber || pack.remote?.versionNumber || '';
+    if (pack.error) {
+      line.textContent = ` · сборка: ${pack.error}`;
+      return;
+    }
+    if (pack.upToDate && ver) line.textContent = ` · сборка ${ver}`;
+    else if (ver && pack.remote && !pack.upToDate) line.textContent = ` · сборка ${pack.local?.versionNumber || '—'} → ${pack.remote.versionNumber}`;
+    else if (ver) line.textContent = ` · сборка ${ver}`;
+    else line.textContent = ' · сборка Modrinth';
+  }
+
   function showBuild() {
     const mc = boot.config.minecraft;
     buildText = `Vanilla++ · ${mc}`;
@@ -2255,6 +2285,7 @@
     renderSide();
     $$('[data-footer]').forEach(el => el.textContent = `Vanilla++ · Minecraft ${mc}`);
     $$('[data-stack]').forEach(el => el.textContent = `Minecraft ${mc} · Fabric ${boot.config.fabricLoader}`);
+    showPack(boot.pack);
   }
 
   // ------------------------------------------------------------------ start
@@ -2297,6 +2328,19 @@
     renderNews();
     renderServers();
     pingServers();
+    showBuild();
+    api.pack.onStatus(pack => {
+      boot.pack = pack;
+      if (pack.minecraft) boot.config.minecraft = pack.minecraft;
+      if (pack.fabricLoader) boot.config.fabricLoader = pack.fabricLoader;
+      showBuild();
+    });
+    if (boot.pack?.enabled) {
+      api.pack.status().then(pack => {
+        boot.pack = pack;
+        showPack(pack);
+      }).catch(() => {});
+    }
 
     await loadMods();
     modsSignature = signature();
