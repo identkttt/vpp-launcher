@@ -157,14 +157,22 @@ async function init() {
   const accounts = [];
   let skinsChanged = false;
   for (const account of s.accounts || []) {
-    if ((account.type === 'microsoft' || account.type === 'ely') && !account.skinUrl) {
-      const next = await Promise.race([
-        auth.withSkin(account),
-        new Promise(resolve => setTimeout(() => resolve(account), 4000)),
-      ]);
-      if (next.skinUrl && next.skinUrl !== account.skinUrl) skinsChanged = true;
-      accounts.push(next);
-    } else accounts.push(account);
+    if (account.type === 'microsoft' || account.type === 'ely') {
+      const needsSkin = !account.skinUrl || /^http:\/\//i.test(account.skinUrl);
+      if (needsSkin) {
+        const next = await Promise.race([
+          auth.withSkin(account),
+          new Promise(resolve => setTimeout(() => resolve({
+            ...account,
+            skinUrl: account.skinUrl ? String(account.skinUrl).replace(/^http:\/\//i, 'https://') : account.skinUrl,
+          }), 4000)),
+        ]);
+        if (next.skinUrl !== account.skinUrl) skinsChanged = true;
+        accounts.push(next);
+        continue;
+      }
+    }
+    accounts.push(account);
   }
   if (skinsChanged) settings.update({ accounts });
   const view = skinsChanged ? settings.get() : s;

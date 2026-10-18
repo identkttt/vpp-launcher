@@ -93,17 +93,19 @@
       el.style.backgroundPosition = '';
       el.style.backgroundImage = `${stock}, ${stock}`;
     };
-    if (!skinUrl) {
+    // Mojang skin CDN is often http:// — CSP only allows https:
+    const src = skinUrl ? String(skinUrl).replace(/^http:\/\//i, 'https://') : '';
+    if (!src) {
       el.dataset.skin = '';
       applyStock();
       return;
     }
-    el.dataset.skin = skinUrl;
+    el.dataset.skin = src;
     applyStock();
     const img = new Image();
     img.onload = () => {
-      if (el.dataset.skin !== skinUrl) return;
-      const url = `url("${String(skinUrl).replace(/"/g, '')}")`;
+      if (el.dataset.skin !== src) return;
+      const url = `url("${src.replace(/"/g, '')}")`;
       const classic = img.naturalHeight * 2 <= img.naturalWidth;
       el.dataset.classic = classic ? '1' : '';
       if (classic) {
@@ -116,8 +118,8 @@
         el.style.backgroundImage = `${url}, ${url}`;
       }
     };
-    img.onerror = () => { if (el.dataset.skin === skinUrl) applyStock(); };
-    img.src = skinUrl;
+    img.onerror = () => { if (el.dataset.skin === src) applyStock(); };
+    img.src = src;
   }
 
   // ------------------------------------------------------------------ state

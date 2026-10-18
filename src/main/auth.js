@@ -140,7 +140,8 @@ async function exchangeMicrosoft(msToken) {
     refreshToken: msToken.refresh_token,
     expiresAt: Date.now() + ((mc.expires_in || msToken.expires_in || 3600) * 1000),
     xuid,
-    skinUrl: active?.url || '',
+    // Mojang still returns http://textures… — CSP in the UI only allows https:
+    skinUrl: httpsUrl(active?.url),
   };
   return account.skinUrl ? account : withSkin(account);
 }
@@ -233,10 +234,14 @@ async function refreshEly(account) {
   return elyAccount(data, account.clientToken, account);
 }
 
+function httpsUrl(url) {
+  return String(url || '').replace(/^http:\/\//i, 'https://');
+}
+
 function skinFromTextures(value) {
   try {
     const json = JSON.parse(Buffer.from(String(value || ''), 'base64').toString('utf8'));
-    return String(json?.textures?.SKIN?.url || '').replace(/^http:\/\//i, 'https://');
+    return httpsUrl(json?.textures?.SKIN?.url);
   } catch {
     return '';
   }
@@ -255,7 +260,7 @@ async function resolveSkin(account) {
   if (!account || account.type === 'offline' || !account.type) return '';
   const id = String(account.uuid || '').replace(/-/g, '');
   if (account.type === 'microsoft') {
-    if (account.skinUrl) return account.skinUrl;
+    if (account.skinUrl) return httpsUrl(account.skinUrl);
     if (id) return profileSkin(`https://sessionserver.mojang.com/session/minecraft/profile/${id}`);
     return '';
   }
@@ -271,10 +276,13 @@ async function resolveSkin(account) {
 
 async function withSkin(account) {
   if (!account || (account.type !== 'microsoft' && account.type !== 'ely')) return account;
-  if (account.skinUrl) return account;
+  if (account.skinUrl) {
+    const skinUrl = httpsUrl(account.skinUrl);
+    return skinUrl === account.skinUrl ? account : { ...account, skinUrl };
+  }
   try {
     const skinUrl = await resolveSkin(account);
-    return skinUrl ? { ...account, skinUrl } : account;
+    return skinUrl ? { ...account, skinUrl: httpsUrl(skinUrl) } : account;
   } catch {
     return account;
   }

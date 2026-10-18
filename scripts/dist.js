@@ -3,7 +3,7 @@
 // Builds:
 //  1) app dir → zip payload (for installer)
 //  2) sakura-styled Electron installer (VanillaPlus-*-x64.exe)
-//  3) portable .exe + portable .zip
+//  3) portable zip (VanillaPlus-*-portable.zip)
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const fsp = require('fs/promises');
@@ -72,6 +72,10 @@ async function zipPortable() {
 async function main() {
   await fsp.rm(appOut, { recursive: true, force: true });
   await fsp.mkdir(releaseOut, { recursive: true });
+  // drop legacy portable .exe from older builds
+  for (const name of await fsp.readdir(releaseOut).catch(() => [])) {
+    if (/portable\.exe$/i.test(name)) await fsp.rm(path.join(releaseOut, name), { force: true });
+  }
 
   run('npx', [
     'electron-builder', '--win', '--dir',
@@ -84,12 +88,6 @@ async function main() {
   run('npx', [
     'electron-builder', '--win', 'portable',
     '--config', 'electron-builder.setup.json',
-  ]);
-
-  run('npx', [
-    'electron-builder', '--win', 'portable',
-    `--config.directories.output=${releaseOut}`,
-    '--config.portable.artifactName=VanillaPlus-${version}-portable.${ext}',
   ]);
 
   console.log('\nГотово:');
