@@ -831,6 +831,32 @@ body.app .window { left: 0; top: 0; transform: none; border-radius: 0; box-shado
 .preview-versions .ver b { font-weight: 500; color: var(--bright); white-space: nowrap; }
 .preview-versions .ver small { margin-left: auto; max-width: 46%; color: var(--faint); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .preview-bar { flex: none; display: flex; justify-content: flex-end; }
+
+.log-view {
+  flex: 1; min-height: 0; overflow: auto;
+  margin: 8px 14px 48px; padding: 10px 12px;
+  border-radius: 10px;
+  background: rgb(0 0 0 / .28);
+  font-family: Consolas, 'Cascadia Mono', 'Courier New', monospace;
+  font-size: 12px; line-height: 1.45;
+  white-space: pre-wrap; word-break: break-word;
+  color: rgb(220 220 224);
+}
+.log-view::-webkit-scrollbar { width: 10px; }
+.log-view::-webkit-scrollbar-thumb { background: rgb(255 255 255 / .1); border-radius: 5px; }
+.log-line { display: block; }
+.log-line .t { color: rgb(255 255 255 / .38); }
+.log-line .th { color: rgb(170 196 220); }
+.log-line .lv { font-weight: 600; }
+.log-line .lv-info, .log-line .lv-debug { color: rgb(127 196 221); }
+.log-line .lv-warn { color: var(--warn); }
+.log-line .lv-error, .log-line .lv-fatal { color: var(--bad); }
+.log-line .lv-trace { color: rgb(255 255 255 / .45); }
+.log-line.level-error, .log-line.level-fatal { background: rgb(221 127 129 / .08); }
+.log-line.level-warn { background: rgb(221 177 127 / .06); }
+.log-line .msg { color: rgb(235 235 240); }
+.log-line.stack { color: rgb(255 255 255 / .42); padding-left: 1.2em; }
+.log-empty { padding: 36px 12px; text-align: center; color: var(--dim); font-family: var(--font); font-size: 12.5px; }
 .row-icon.has-img { background: rgb(255 255 255 / .06) !important; }
 .pill.bad { background: rgb(221 127 129 / .16); color: var(--bad); }
 

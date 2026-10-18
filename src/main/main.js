@@ -337,6 +337,103 @@ async function openLog() {
   return 'Логов пока нет - игра ещё не запускалась';
 }
 
+function logSources(root) {
+  return [
+    { id: 'game', name: 'Игра', file: path.join(root, 'logs', 'latest.log') },
+    { id: 'output', name: 'Консоль Java', file: path.join(root, 'launcher', 'game-output.log') },
+    { id: 'launcher', name: 'Лаунчер', file: path.join(root, 'launcher', 'launcher.log') },
+  ];
+}
+
+function decodeLogText(buf) {
+  let text = buf.toString('utf8');
+  if (text.includes('\uFFFD') && buf.includes(0)) {
+    try { text = new TextDecoder('utf-8', { fatal: false }).decode(buf); } catch { /* keep */ }
+  }
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+function flattenLog4j(text) {
+  if (!text.includes('<log4j:')) return text;
+  const lines = [];
+  const re = /<log4j:Event\b([^>]*)>[\s\S]*?<log4j:Message><!\[CDATA\[([\s\S]*?)\]\]>[\s\S]*?(?:<log4j:Throwable><!\[CDATA\[([\s\S]*?)\]\]>)?[\s\S]*?<\/log4j:Event>/g;
+  let m;
+  let matched = false;
+  while ((m = re.exec(text))) {
+    matched = true;
+    const attrs = m[1] || '';
+    const level = (attrs.match(/\blevel="([^"]+)"/i) || [])[1] || 'INFO';
+    const logger = (attrs.match(/\blogger="([^"]+)"/i) || [])[1] || '';
+    const stamp = (attrs.match(/\btimestamp="(\d+)"/i) || [])[1];
+    const time = stamp
+      ? new Date(+stamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+      : '';
+    const head = time ? `[${time}] [${logger || 'main'}/${level}]` : `[${logger || 'main'}/${level}]`;
+    for (const line of String(m[2] || '').split('\n')) lines.push(`${head}: ${line}`);
+    if (m[3]) for (const line of String(m[3]).split('\n')) lines.push(line);
+  }
+  if (!matched) {
+    const loose = /<log4j:(?:Message|Throwable)><!\[CDATA\[([\s\S]*?)\]\]>/g;
+    while ((m = loose.exec(text))) lines.push(...m[1].split('\n'));
+  }
+  const rest = text.replace(/<log4j:Event[\s\S]*?<\/log4j:Event>/g, '').trim();
+  if (rest) lines.push(...rest.split('\n'));
+  return lines.join('\n');
+}
+
+async function readLog(id = 'game') {
+  const root = gameRoot();
+  const sources = [];
+  for (const source of logSources(root)) {
+    let size = 0;
+    let mtime = 0;
+    try {
+      const stat = await fsp.stat(source.file);
+      size = stat.size;
+      mtime = stat.mtimeMs;
+    } catch { /* missing */ }
+    sources.push({ id: source.id, name: source.name, exists: size > 0 || await exists(source.file), size, mtime });
+  }
+  const pick = logSources(root).find(s => s.id === id) || logSources(root)[0];
+  const maxBytes = 700 * 1024;
+  let text = '';
+  let truncated = false;
+  let size = 0;
+  try {
+    const handle = await fsp.open(pick.file, 'r');
+    try {
+      const stat = await handle.stat();
+      size = stat.size;
+      const start = Math.max(0, size - maxBytes);
+      truncated = start > 0;
+      const buf = Buffer.alloc(size - start);
+      await handle.read(buf, 0, buf.length, start);
+      text = decodeLogText(buf);
+      if (truncated) {
+        const cut = text.indexOf('\n');
+        if (cut >= 0) text = text.slice(cut + 1);
+      }
+    } finally {
+      await handle.close();
+    }
+  } catch {
+    text = '';
+  }
+  if (pick.id === 'output') text = flattenLog4j(text);
+  const lines = text ? text.split('\n') : [];
+  const maxLines = 4000;
+  const slice = lines.length > maxLines ? lines.slice(-maxLines) : lines;
+  return {
+    id: pick.id,
+    sources,
+    truncated: truncated || lines.length > maxLines,
+    empty: !slice.length,
+    text: slice.join('\n'),
+    lineCount: slice.length,
+  };
+}
+
 async function pickFile(kind) {
   const filters = {
     java: [{ name: 'Java', extensions: ['exe'] }],
@@ -458,6 +555,12 @@ function registerIpc() {
   handle('game:stop', stopGame);
   handle('open:path', which => openPath(which));
   handle('open:log', openLog);
+  handle('logs:read', id => readLog(id));
+  handle('logs:open', async id => {
+    const pick = logSources(gameRoot()).find(s => s.id === id) || logSources(gameRoot())[0];
+    if (await exists(pick.file)) return shell.openPath(pick.file);
+    return 'Этого лога пока нет';
+  });
   handle('open:file', file => shell.openPath(file));
   handle('pick', kind => pickFile(kind));
   handle('background:set', file => setBackground(file));

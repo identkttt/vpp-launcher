@@ -88,11 +88,11 @@
         <button class="nav" data-page="shaders"><svg class="ic"><use href="#i-sun"/></svg><span>Шейдеры</span><em class="count" id="navShaders" title="Включено">0</em></button>
         <button class="nav" data-page="accounts"><svg class="ic"><use href="#i-user"/></svg><span>Аккаунты</span></button>
         <button class="nav" data-page="settings"><svg class="ic"><use href="#i-tune"/></svg><span>Настройки</span></button>
+        <button class="nav" data-page="logs"><svg class="ic"><use href="#i-log"/></svg><span>Логи</span></button>
       </nav>
 
       <div class="group">Прочее</div>
       <button class="nav" data-act="folder"><svg class="ic"><use href="#i-folder"/></svg><span>Папка игры</span></button>
-      <button class="nav" data-act="logs"><svg class="ic"><use href="#i-log"/></svg><span>Логи</span></button>
 
       <div class="grow"></div>
       <div class="hair"></div>
@@ -294,6 +294,33 @@
           <div class="group-label st" style="--i:4">Сохранённые · <span id="accCount">0</span></div>
           <div id="accList"></div>
         </div>
+        <div class="status" data-status></div>
+      </section>
+
+      <!-- ============================================================ logs -->
+      <section class="page pane glass" data-page="logs">
+        <header class="pane-head">
+          <svg class="ic"><use href="#i-log"/></svg><span>Логи</span>
+          <button class="btn wash small head-action" id="logRefresh"><svg class="ic"><use href="#i-undo"/></svg>Обновить</button>
+        </header>
+        <div class="source-bar">
+          <div class="segmented" id="logSource">
+            <span class="seg-wash"></span>
+            <button data-v="game" class="on">Игра</button>
+            <button data-v="output">Консоль Java</button>
+            <button data-v="launcher">Лаунчер</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label class="well search">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input id="logSearch" placeholder="Фильтр по строкам" autocomplete="off" spellcheck="false">
+          </label>
+          <button class="btn wash" data-act="folder-logs"><svg class="ic"><use href="#i-folder"/></svg>Папка</button>
+          <button class="btn wash" id="logOpenExt"><svg class="ic"><use href="#i-file"/></svg>В редакторе</button>
+        </div>
+        <div class="hint" id="logMeta"><svg class="ic"><use href="#i-log"/></svg><span>Лог игры · latest.log</span></div>
+        <div class="log-view" id="logView"></div>
         <div class="status" data-status></div>
       </section>
 

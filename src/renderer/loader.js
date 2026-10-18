@@ -444,6 +444,7 @@
     if (page === 'mods' || page === 'packs' || page === 'shaders') showShelf(page);
     if (page === 'home') pingServers();
     if (page === 'settings') readMemory();
+    if (page === 'logs') loadLogs();
     if (focus === 'ram') setTimeout(() => {
       $('#ramBlock').animate([{ background: 'rgb(var(--accent) / .14)' }, { background: 'transparent' }],
         { duration: 1100, easing: 'ease-out', delay: 250 });
@@ -467,11 +468,7 @@
         case 'folder-mods': await api.open.path('mods'); break;
         case 'folder-packs': await api.open.path('resourcepacks'); break;
         case 'folder-shaders': await api.open.path('shaderpacks'); break;
-        case 'logs': {
-          const result = await api.open.log();
-          if (result) toast('log', result);
-          break;
-        }
+        case 'folder-logs': await api.open.path('logs'); break;
         case 'min': await api.window.minimize(); break;
         case 'close': await api.window.close(); break;
       }
@@ -795,6 +792,124 @@
       }
     }
   });
+
+  // ------------------------------------------------------------------ logs
+
+  const logState = { id: 'game', text: '', filter: '', timer: 0, stickBottom: true };
+  const LOG_META = {
+    game: 'Лог игры · latest.log',
+    output: 'Консоль Java · game-output.log',
+    launcher: 'Лог лаунчера · launcher.log',
+  };
+
+  function colorizeLogLine(raw) {
+    const line = String(raw ?? '');
+    if (/^\s+at\s|^\s+Caused by:|^\s+\.\.\. \d+ more|^\s*Exception|^\s*Error|^\s*java\.|^\s*net\.|^\s*com\./.test(line)) {
+      return `<span class="log-line stack">${esc(line)}</span>`;
+    }
+    const mc = line.match(/^\[(\d{2}:\d{2}:\d{2})\]\s+\[([^/\]]+)\/(INFO|WARN|ERROR|FATAL|DEBUG|TRACE)\]:?\s*(.*)$/i);
+    if (mc) {
+      const level = mc[3].toLowerCase();
+      return `<span class="log-line level-${level}"><span class="t">[${esc(mc[1])}]</span> [<span class="th">${esc(mc[2])}</span>/<span class="lv lv-${level}">${esc(mc[3].toUpperCase())}</span>]${mc[4] ? `: <span class="msg">${esc(mc[4])}</span>` : ''}</span>`;
+    }
+    const mc2 = line.match(/^\[(\d{2}:\d{2}:\d{2})\]\s+\[([^/\]]+)\/(INFO|WARN|ERROR|FATAL|DEBUG|TRACE)\]\s+(\([^)]*\))\s*(.*)$/i);
+    if (mc2) {
+      const level = mc2[3].toLowerCase();
+      return `<span class="log-line level-${level}"><span class="t">[${esc(mc2[1])}]</span> [<span class="th">${esc(mc2[2])}</span>/<span class="lv lv-${level}">${esc(mc2[3].toUpperCase())}</span>] <span class="th">${esc(mc2[4])}</span> <span class="msg">${esc(mc2[5])}</span></span>`;
+    }
+    const iso = line.match(/^\[(\d{4}-\d{2}-\d{2}T[^\]]+)\]\s*(.*)$/);
+    if (iso) {
+      const rest = iso[2];
+      const bad = /error|fail|exception/i.test(rest);
+      const warn = /warn/i.test(rest);
+      const level = bad ? 'error' : warn ? 'warn' : 'info';
+      return `<span class="log-line level-${level}"><span class="t">[${esc(iso[1])}]</span> <span class="msg">${esc(rest)}</span></span>`;
+    }
+    const plain = line.match(/^(INFO|WARN|ERROR|FATAL|DEBUG|TRACE)\s*[:\-]?\s*(.*)$/i);
+    if (plain) {
+      const level = plain[1].toLowerCase();
+      return `<span class="log-line level-${level}"><span class="lv lv-${level}">${esc(plain[1].toUpperCase())}</span> <span class="msg">${esc(plain[2])}</span></span>`;
+    }
+    if (/error|exception|failed/i.test(line)) return `<span class="log-line level-error"><span class="msg">${esc(line)}</span></span>`;
+    if (/warn/i.test(line)) return `<span class="log-line level-warn"><span class="msg">${esc(line)}</span></span>`;
+    return `<span class="log-line"><span class="msg">${esc(line)}</span></span>`;
+  }
+
+  function renderLogView() {
+    const view = $('#logView');
+    const q = logState.filter.trim().toLowerCase();
+    const lines = logState.text ? logState.text.split('\n') : [];
+    const matched = q ? lines.filter(line => line.toLowerCase().includes(q)) : lines;
+    const nearBottom = view.scrollHeight - view.scrollTop - view.clientHeight < 48;
+    if (!matched.length) {
+      view.innerHTML = `<div class="log-empty">${logState.text ? 'Ничего не нашлось по фильтру' : 'Логов пока нет - запустите игру'}</div>`;
+      return;
+    }
+    const maxPaint = 2500;
+    const paint = matched.length > maxPaint ? matched.slice(-maxPaint) : matched;
+    const head = matched.length > maxPaint
+      ? `<div class="log-empty" style="padding:8px 0 12px">Показаны последние ${maxPaint} из ${matched.length}</div>`
+      : '';
+    view.innerHTML = head + paint.map(colorizeLogLine).join('');
+    if (logState.stickBottom || nearBottom) view.scrollTop = view.scrollHeight;
+  }
+
+  async function loadLogs({ quiet } = {}) {
+    try {
+      const data = await api.logs.read(logState.id);
+      logState.id = data.id;
+      logState.text = data.text || '';
+      setSeg($('#logSource'), logState.id);
+      const src = (data.sources || []).find(s => s.id === logState.id);
+      const bits = [LOG_META[logState.id] || 'Лог'];
+      if (data.truncated) bits.push('показан хвост файла');
+      if (src?.size) bits.push(fmtBytes(src.size));
+      if (data.lineCount) bits.push(`${data.lineCount} строк`);
+      $('#logMeta').innerHTML = `<svg class="ic"><use href="#i-log"/></svg><span>${esc(bits.join(' · '))}</span>`;
+      renderLogView();
+    } catch (e) {
+      if (!quiet) status('logs', 'warn', e.message, 'warn');
+      $('#logView').innerHTML = `<div class="log-empty">${esc(e.message)}</div>`;
+    }
+  }
+
+  function armLogPoll() {
+    clearInterval(logState.timer);
+    logState.timer = setInterval(() => {
+      if (state.page === 'logs') loadLogs({ quiet: true });
+    }, 2500);
+  }
+
+  $('#logSource').addEventListener('click', e => {
+    const button = e.target.closest('button');
+    if (!button?.dataset.v) return;
+    logState.id = button.dataset.v;
+    logState.stickBottom = true;
+    setSeg($('#logSource'), logState.id);
+    loadLogs();
+  });
+  $('#logSearch').addEventListener('input', e => {
+    logState.filter = e.target.value;
+    renderLogView();
+  });
+  $('#logRefresh').addEventListener('click', () => {
+    logState.stickBottom = true;
+    loadLogs();
+  });
+  $('#logOpenExt').addEventListener('click', async () => {
+    try {
+      const result = await api.logs.open(logState.id);
+      if (result) toast('log', result);
+    } catch (e) {
+      status('logs', 'warn', e.message, 'warn');
+    }
+  });
+  $('#logView').addEventListener('scroll', () => {
+    const view = $('#logView');
+    logState.stickBottom = view.scrollHeight - view.scrollTop - view.clientHeight < 48;
+  });
+  addEventListener('focus', () => { if (state.page === 'logs') loadLogs({ quiet: true }); });
+  armLogPoll();
 
   // ------------------------------------------------------------------ Modrinth, CurseForge, resource packs, shaders
 
@@ -2097,7 +2212,7 @@
   launchLine.addEventListener('click', e => {
     const file = e.target.closest('[data-open-file]');
     if (file) api.open.file(file.dataset.openFile);
-    if (e.target.closest('[data-open-log]')) action('logs');
+    if (e.target.closest('[data-open-log]')) show('logs');
   });
 
   play.addEventListener('click', () => launch());
@@ -2176,7 +2291,7 @@
     // #mods, #accounts, #settings open straight on that page
     const first = location.hash.slice(1);
     if (first === 'profile') show('accounts');
-    else if (['mods', 'packs', 'shaders', 'accounts', 'settings'].includes(first)) show(first);
+    else if (['mods', 'packs', 'shaders', 'accounts', 'settings', 'logs'].includes(first)) show(first);
     document.fonts?.ready.then(() => { placeWash(); $$('.segmented').forEach(placeSeg); });
     placeWash();
   }

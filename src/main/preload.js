@@ -51,6 +51,10 @@ contextBridge.exposeInMainWorld('vanilla', {
     log: () => call('open:log'),
     file: file => call('open:file', file),
   },
+  logs: {
+    read: id => call('logs:read', id),
+    open: id => call('logs:open', id),
+  },
   pick: kind => call('pick', kind),
   setBackground: file => call('background:set', file),
   ping: address => call('ping', address),
