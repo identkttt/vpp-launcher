@@ -9,7 +9,9 @@ const RUNTIMES_URL = 'https://launchermeta.mojang.com/v1/products/java-runtime/2
 function platform() {
   if (process.platform === 'win32') return process.arch === 'arm64' ? 'windows-arm64' : process.arch === 'ia32' ? 'windows-x86' : 'windows-x64';
   if (process.platform === 'darwin') return process.arch === 'arm64' ? 'mac-os-arm64' : 'mac-os';
-  return process.arch === 'ia32' ? 'linux-i386' : 'linux';
+  if (process.arch === 'arm64') return 'linux-arm64';
+  if (process.arch === 'ia32') return 'linux-i386';
+  return 'linux';
 }
 
 function runtimeHome(root, component) {

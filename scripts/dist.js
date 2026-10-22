@@ -1,9 +1,8 @@
 'use strict';
 
-// Builds:
-//  1) app dir → zip payload (for installer)
-//  2) sakura-styled Electron installer (VanillaPlus-*-x64.exe)
-//  3) portable zip (VanillaPlus-*-portable.zip)
+// Windows: installer + portable zip.
+// macOS: .pkg + .zip. Linux: AppImage, deb, pacman, tar.gz.
+// Each platform is built on itself (`npm run dist`).
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const fsp = require('fs/promises');
@@ -69,10 +68,9 @@ async function zipPortable() {
   console.log(`portable.zip · ${mb} МБ → ${path.basename(outZip)}`);
 }
 
-async function main() {
+async function distWindows() {
   await fsp.rm(appOut, { recursive: true, force: true });
   await fsp.mkdir(releaseOut, { recursive: true });
-  // drop legacy portable .exe from older builds
   for (const name of await fsp.readdir(releaseOut).catch(() => [])) {
     if (/portable\.exe$/i.test(name)) await fsp.rm(path.join(releaseOut, name), { force: true });
   }
@@ -89,10 +87,26 @@ async function main() {
     'electron-builder', '--win', 'portable',
     '--config', 'electron-builder.setup.json',
   ]);
+}
+
+async function distUnix(builderArgs) {
+  await fsp.mkdir(releaseOut, { recursive: true });
+  run('npx', [
+    'electron-builder',
+    ...builderArgs,
+    `--config.directories.output=${releaseOut}`,
+  ]);
+}
+
+async function main() {
+  if (process.platform === 'win32') await distWindows();
+  else if (process.platform === 'darwin') await distUnix(['--mac', 'pkg', 'zip', '--arm64', '--x64']);
+  else if (process.platform === 'linux') await distUnix(['--linux', 'AppImage', 'deb', 'pacman', 'tar.gz']);
+  else throw new Error(`Сборка для ${process.platform} не настроена`);
 
   console.log('\nГотово:');
   for (const name of await fsp.readdir(releaseOut)) {
-    if (!/\.(exe|zip)$/i.test(name)) continue;
+    if (!/\.(exe|zip|pkg|AppImage|deb|pacman|tar\.gz)$/i.test(name)) continue;
     const size = (fs.statSync(path.join(releaseOut, name)).size / 1048576).toFixed(1);
     console.log(`  ${name} · ${size} МБ`);
   }

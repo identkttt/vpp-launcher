@@ -1,5 +1,6 @@
 'use strict';
 
+const os = require('os');
 const fsp = require('fs/promises');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -65,8 +66,13 @@ async function prepare({ root, config, settings, account, signal, report }) {
 
 // Other launchers' folders on this machine, whose assets and libraries are the very same files
 function seedDirs(root) {
-  const appData = process.env.APPDATA || '';
-  const bases = appData ? ['.minecraft', 'PrismLauncher', 'PolyMC', 'MultiMC', '.tlauncher'].map(n => path.join(appData, n)) : [];
+  const home = os.homedir();
+  const roots = [];
+  if (process.platform === 'win32' && process.env.APPDATA) roots.push(process.env.APPDATA);
+  else if (process.platform === 'darwin') roots.push(path.join(home, 'Library', 'Application Support'));
+  else roots.push(path.join(home, '.local', 'share'), home);
+  const names = ['.minecraft', 'PrismLauncher', 'PolyMC', 'MultiMC', '.tlauncher'];
+  const bases = roots.flatMap(dir => names.map(n => path.join(dir, n)));
   const own = path.resolve(root);
   const list = env => (process.env[env] || '').split(path.delimiter).filter(Boolean);
   const assets = [...bases.map(b => path.join(b, 'assets')), ...list('VANILLA_SEED_ASSETS')];

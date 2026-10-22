@@ -13,7 +13,8 @@
     "icon": "java scripts/MakeIcon.java",
     "dist": "node scripts/dist.js",
     "dist:dir": "electron-builder --win --dir",
-    "build:mac": "electron-builder --mac pkg",
+    "build:mac": "electron-builder --mac pkg zip",
+    "dist:linux": "electron-builder --linux AppImage deb pacman tar.gz",
     "test:install": "node scripts/test-install.js"
   },
   "build": {
@@ -36,6 +37,26 @@
       "target": [
         "dir"
       ]
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.games",
+      "target": [
+        "pkg",
+        "zip"
+      ],
+      "identity": null
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Game",
+      "target": [
+        "AppImage",
+        "deb",
+        "pacman",
+        "tar.gz"
+      ],
+      "artifactName": "VanillaPlus-${version}-${arch}.${ext}"
     }
   },
   "devDependencies": {

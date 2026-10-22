@@ -1,5 +1,6 @@
 'use strict';
 
+const os = require('os');
 const crypto = require('crypto');
 const { execFile } = require('child_process');
 
@@ -25,7 +26,11 @@ async function deviceId() {
     registry('HKLM\\SYSTEM\\HardwareConfig', 'LastConfig', /LastConfig\s+REG_SZ\s+\{?([0-9A-Fa-f-]+)\}?/),
   ]);
   let source = `${guid}|${firmware}`;
-  if (!guid && !firmware) source = `${process.env.COMPUTERNAME || ''}/${process.env.USERNAME || ''}`.toLowerCase();
+  if (!guid && !firmware) {
+    const host = process.env.COMPUTERNAME || os.hostname();
+    const user = process.env.USERNAME || os.userInfo().username;
+    source = `${host}/${user}`.toLowerCase();
+  }
   cached = crypto.createHash('sha256').update(`vanilla-device:${source}`).digest('hex');
   return cached;
 }
