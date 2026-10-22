@@ -1811,14 +1811,66 @@
     candara: { label: 'Candara', stack: "Candara, 'Noto Sans', sans-serif", title: "Candara, 'Noto Sans', sans-serif" },
     constantia: { label: 'Constantia', stack: "Constantia, 'Noto Sans', serif", title: "Constantia, 'Noto Sans', serif" },
   };
-  let accentNow = [244, 168, 190], accentAnim;
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) h = s = 0;
+    else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return [h * 360, s, l];
+  }
+  function hslToRgb(h, s, l) {
+    h /= 360;
+    let r, g, b;
+    if (s === 0) r = g = b = l;
+    else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+  function computeSmoke(rgb) {
+    if (rgb[0] === 244 && rgb[1] === 168 && rgb[2] === 190) return [22, 12, 16];
+    const [h, s] = rgbToHsl(...rgb);
+    if (s < 0.05) return [17, 17, 19];
+    const targetSat = Math.min(0.32, Math.max(0.18, s * 0.38));
+    const targetLight = 0.068;
+    return hslToRgb(h, targetSat, targetLight);
+  }
+
+  let accentNow = [244, 168, 190], smokeNow = [22, 12, 16], accentAnim;
   function setAccent(to, instant) {
-    const from = accentNow.slice(), start = performance.now();
+    const fromAccent = accentNow.slice();
+    const toSmoke = computeSmoke(to);
+    const fromSmoke = smokeNow.slice();
+    const start = performance.now();
     cancelAnimationFrame(accentAnim);
     (function step(now) {
       const t = instant ? 1 : Math.min(1, (now - start) / 450), e = 1 - Math.pow(1 - t, 3);
-      accentNow = from.map((c, i) => Math.round(c + (to[i] - c) * e));
+      accentNow = fromAccent.map((c, i) => Math.round(c + (to[i] - c) * e));
+      smokeNow = fromSmoke.map((c, i) => Math.round(c + (toSmoke[i] - c) * e));
       document.documentElement.style.setProperty('--accent', accentNow.join(' '));
+      document.documentElement.style.setProperty('--smoke', smokeNow.join(' '));
       if (t < 1) accentAnim = requestAnimationFrame(step);
     })(start);
   }
