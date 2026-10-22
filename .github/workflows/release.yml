@@ -38,7 +38,7 @@ jobs:
           cache: npm
       - name: Linux packaging tools
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y fakeroot
+        run: sudo apt-get update && sudo apt-get install -y fakeroot libarchive-tools
       - run: npm ci
       - run: npm run dist
         env:
