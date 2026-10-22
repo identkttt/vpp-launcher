@@ -1902,12 +1902,8 @@
   let currentThemeMode = 'dark';
   function computeSmoke(rgb, isLight = (currentThemeMode === 'light')) {
     const [h, s, l] = rgbToHsl(...rgb);
-    if (isLight) {
-      if (s < 0.05) return [248, 248, 250];
-      const targetSat = Math.min(0.25, Math.max(0.08, s * 0.25));
-      const targetLight = 0.95;
-      return hslToRgb(h, targetSat, targetLight);
-    } else {
+    if (isLight) return [248, 248, 250];
+    else {
       if (rgb[0] === 244 && rgb[1] === 168 && rgb[2] === 190) return [22, 12, 16];
       if (s < 0.05) return [17, 17, 19];
       const targetSat = Math.min(0.32, Math.max(0.18, s * 0.38));
@@ -2034,12 +2030,14 @@
     $('#themeName').textContent = name;
     $('#accentColor').value = rgbHex(rgb);
     setAccent(rgb, instant);
+    syncPicker(rgb);
   }
   function pickCustom(rgb, instant) {
     markSwatch(-1, instant);
     $('#themeName').textContent = 'Свой';
     $('#accentColor').value = rgbHex(rgb);
     setAccent(rgb, instant);
+    syncPicker(rgb);
   }
   THEMES.forEach(([name, rgb], i) => {
     const b = document.createElement('button');
@@ -2058,14 +2056,114 @@
     swatches.appendChild(b);
   });
   $('#accentColor').addEventListener('input', () => {
-    const rgb = hexRgb($('#accentColor').value);
-    if (rgb.some(n => Number.isNaN(n))) return;
+    const raw = String($('#accentColor').value).trim();
+    if (!/^#?[0-9a-fA-F]{6}$/.test(raw)) return;
+    const rgb = hexRgb(raw);
     if (state.settings?.autoAccent) {
       setSwitch('autoAccent', false);
       save({ autoAccent: false });
     }
     pickCustom(rgb, true);
     save({ accent: rgb });
+  });
+
+  function rgbToHsv(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    let h = 0;
+    if (d) {
+      if (max === r) h = ((g - b) / d) % 6;
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h = (h * 60 + 360) % 360;
+    }
+    return [h, max === 0 ? 0 : d / max, max];
+  }
+  function hsvToRgb(h, s, v) {
+    const c = v * s;
+    const hp = ((h % 360) + 360) % 360 / 60;
+    const x = c * (1 - Math.abs(hp % 2 - 1));
+    const m = v - c;
+    let r = 0, g = 0, bl = 0;
+    if (hp < 1) [r, g, bl] = [c, x, 0];
+    else if (hp < 2) [r, g, bl] = [x, c, 0];
+    else if (hp < 3) [r, g, bl] = [0, c, x];
+    else if (hp < 4) [r, g, bl] = [0, x, c];
+    else if (hp < 5) [r, g, bl] = [x, 0, c];
+    else [r, g, bl] = [c, 0, x];
+    return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((bl + m) * 255)];
+  }
+  let pickerH = 340, pickerS = 0.42, pickerV = 0.96, pickerLock = false;
+  function paintPicker() {
+    const sv = $('#pickerSv');
+    if (!sv) return;
+    sv.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${pickerH} 100% 50%))`;
+    $('#pickerCursor').style.left = `${pickerS * 100}%`;
+    $('#pickerCursor').style.top = `${(1 - pickerV) * 100}%`;
+    $('#pickerHue').value = String(Math.round(pickerH));
+    const rgb = hsvToRgb(pickerH, pickerS, pickerV);
+    $('#accentColorBtn').style.background = `rgb(${rgb.join(' ')})`;
+  }
+  function syncPicker(rgb) {
+    const btn = $('#accentColorBtn');
+    if (!btn || !rgb || rgb.some(n => Number.isNaN(n))) return;
+    if (pickerLock) {
+      btn.style.background = `rgb(${rgb.join(' ')})`;
+      return;
+    }
+    const [h, s, v] = rgbToHsv(rgb[0], rgb[1], rgb[2]);
+    if (s > 0.02) pickerH = h;
+    pickerS = s;
+    pickerV = v;
+    paintPicker();
+  }
+  function emitAccent(rgb) {
+    pickerLock = true;
+    try {
+      $('#accentColor').value = rgbHex(rgb);
+      $('#accentColor').dispatchEvent(new Event('input'));
+    } finally {
+      pickerLock = false;
+    }
+  }
+  const picker = $('#picker');
+  const pickerSv = $('#pickerSv');
+  function togglePicker() {
+    if (!picker) return;
+    if (picker.hidden) {
+      syncPicker(hexRgb($('#accentColor').value));
+      picker.hidden = false;
+    } else picker.hidden = true;
+  }
+  $('#accentColorBtn').onclick = (e) => { e.stopPropagation(); togglePicker(); };
+  $('#accentColorOpen').onclick = (e) => { e.stopPropagation(); togglePicker(); };
+  document.addEventListener('pointerdown', (e) => {
+    if (!picker || picker.hidden) return;
+    if ($('#colorPick').contains(e.target)) return;
+    picker.hidden = true;
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && picker && !picker.hidden) picker.hidden = true;
+  });
+  function pointToSv(ev) {
+    const rect = pickerSv.getBoundingClientRect();
+    pickerS = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
+    pickerV = Math.min(1, Math.max(0, 1 - (ev.clientY - rect.top) / rect.height));
+    paintPicker();
+    emitAccent(hsvToRgb(pickerH, pickerS, pickerV));
+  }
+  pickerSv.addEventListener('pointerdown', (ev) => {
+    pickerSv.setPointerCapture(ev.pointerId);
+    pointToSv(ev);
+  });
+  pickerSv.addEventListener('pointermove', (ev) => {
+    if (!pickerSv.hasPointerCapture(ev.pointerId)) return;
+    pointToSv(ev);
+  });
+  $('#pickerHue').addEventListener('input', () => {
+    pickerH = Number($('#pickerHue').value);
+    paintPicker();
+    emitAccent(hsvToRgb(pickerH, pickerS, pickerV));
   });
 
   function applyFont(id) {

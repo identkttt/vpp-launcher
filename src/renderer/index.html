@@ -394,7 +394,15 @@
                 <div class="set-col">
                   <div class="set-name">Цвет <span class="set-sub inline-sub" id="themeName">Сакура</span></div>
                   <div class="swatches" id="swatches"></div>
-                  <label class="color-pick">Свой<input type="color" id="accentColor" value="#f4a8be" aria-label="Свой цвет"></label>
+                  <div class="color-pick" id="colorPick">
+                    <button type="button" class="swatch custom" id="accentColorBtn" aria-label="Свой цвет"></button>
+                    <button type="button" class="color-pick-label" id="accentColorOpen">Свой</button>
+                    <div class="picker glass" id="picker" hidden>
+                      <div class="picker-sv" id="pickerSv"><span class="picker-cursor" id="pickerCursor"></span></div>
+                      <input class="picker-hue" id="pickerHue" type="range" min="0" max="360" value="340" aria-label="Оттенок">
+                      <label class="well mono picker-hex"><input id="accentColor" value="#f4a8be" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Свой цвет"></label>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="set st" style="--i:3">
