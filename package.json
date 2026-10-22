@@ -50,6 +50,10 @@
     "linux": {
       "icon": "build/icon.png",
       "category": "Game",
+      "executableName": "VanillaPlus",
+      "desktop": {
+        "Name": "Vanilla++"
+      },
       "target": [
         "AppImage",
         "deb",

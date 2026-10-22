@@ -98,10 +98,26 @@ async function distUnix(builderArgs) {
   ]);
 }
 
+async function distMac() {
+  await fsp.mkdir(releaseOut, { recursive: true });
+  // pkg and a second arch in one electron-builder call race on distribution.xml
+  for (const arch of ['arm64', 'x64']) {
+    run('npx', ['electron-builder', '--mac', 'zip', `--${arch}`, `--config.directories.output=${releaseOut}`]);
+    run('npx', ['electron-builder', '--mac', 'pkg', `--${arch}`, `--config.directories.output=${releaseOut}`]);
+  }
+}
+
 async function main() {
   if (process.platform === 'win32') await distWindows();
-  else if (process.platform === 'darwin') await distUnix(['--mac', 'pkg', 'zip', '--arm64', '--x64']);
-  else if (process.platform === 'linux') await distUnix(['--linux', 'AppImage', 'deb', 'pacman', 'tar.gz']);
+  else if (process.platform === 'darwin') await distMac();
+  // AppImage rejects "+" in the product filename; the window title in the UI stays Vanilla++
+  else if (process.platform === 'linux') {
+    await distUnix([
+      '--linux', 'AppImage', 'deb', 'pacman', 'tar.gz',
+      '--config.productName=VanillaPlus',
+      '--config.linux.executableName=VanillaPlus',
+    ]);
+  }
   else throw new Error(`Сборка для ${process.platform} не настроена`);
 
   console.log('\nГотово:');
