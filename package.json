@@ -5,7 +5,10 @@
   "description": "Лаунчер Vanilla++ для ванильного Minecraft",
   "main": "src/main/main.js",
   "private": true,
-  "author": "Vanilla++",
+  "author": {
+    "name": "Vanilla++",
+    "email": "pashtetusss777@users.noreply.github.com"
+  },
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",

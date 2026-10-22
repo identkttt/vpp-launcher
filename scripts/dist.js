@@ -16,6 +16,9 @@ const payloadZip = path.join(root, 'build', 'payload.zip');
 const pkg = require('../package.json');
 
 function run(cmd, args, env = {}) {
+  if ((args[0] === 'npx' && args[1] === 'electron-builder') || args[0] === 'electron-builder') {
+    args = [...args, '--publish', 'never'];
+  }
   console.log('>', cmd, args.join(' '));
   const result = spawnSync(cmd, args, {
     cwd: root,
