@@ -78,5 +78,6 @@ jobs:
           TAG="${{ inputs.tag }}"
           if [ -z "$TAG" ]; then TAG="${GITHUB_REF_NAME}"; fi
           gh release create "$TAG" "${files[@]}" \
+            --repo "${{ github.repository }}" \
             --title "Vanilla++ ${TAG#v}" \
             --notes "Windows (установщик и portable zip), macOS (.pkg и zip), Linux x64 и arm64 (AppImage, deb, pacman, tar.gz)."
