@@ -7,16 +7,35 @@
     "modrinthProject": "vanilla-plus-plus-pashtetusss777",
     "comment": "Slug или id модпака на Modrinth. Пусто = автообновление сборки выключено."
   },
+  "updates": {
+    "github": "pashtetusss777/vpp-launcher"
+  },
+  "defaults": {
+    "themeMode": "dark",
+    "background": "sakura",
+    "font": "noto",
+    "particles": true,
+    "afterLaunch": "hide",
+    "fullscreen": false
+  },
   "client": {
     "name": "Vanilla++"
   },
   "news": {
     "title": "Что нового",
-    "tag": "1.1.2",
+    "tag": "1.1.4",
     "items": [
       [
-        "Автообновление",
-        "автоматически обновляет сборку при запуске"
+        "Тема ланучера",
+        "Была добавлена белая тема ланучера"
+      ],
+      [
+        "Багфиксы",
+        "исправлены ошибки при запуске"
+      ],
+      [
+        "Обновление лаунчера",
+        "новая версия скачивается прямо из лаунчера"
       ]
     ]
   },

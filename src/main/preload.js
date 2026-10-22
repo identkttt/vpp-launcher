@@ -42,6 +42,11 @@ contextBridge.exposeInMainWorld('vanilla', {
     status: () => call('pack:status'),
     onStatus: fn => on('pack:status', fn),
   },
+  update: {
+    check: () => call('update:check'),
+    install: () => call('update:install'),
+    onProgress: fn => on('update:progress', fn),
+  },
   game: {
     launch: server => call('game:launch', server),
     cancel: () => call('game:cancel'),

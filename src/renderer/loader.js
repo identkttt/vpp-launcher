@@ -2450,6 +2450,18 @@
 
   // ------------------------------------------------------------------ the loader's own name and what it runs
 
+  function showLauncherUpdate(info) {
+    const el = $('#updateBanner');
+    if (!el) return;
+    if (!info?.version) {
+      el.hidden = true;
+      return;
+    }
+    el.hidden = false;
+    $('#updateText').textContent = `Доступна Vanilla++ ${info.version}`;
+    $('#updateGo').textContent = 'Обновить';
+  }
+
   function showPack(pack) {
     const line = $('#packLine');
     if (!line) return;
@@ -2545,6 +2557,33 @@
     if (boot.state.phase === 'running') running(boot.state);
     else if (boot.state.phase === 'busy') busy();
     else idleLine();
+    showLauncherUpdate(boot.update);
+
+    const updateBanner = $('#updateBanner');
+    if (updateBanner) {
+      updateBanner.addEventListener('click', async () => {
+        if (updateBanner.disabled) return;
+        updateBanner.disabled = true;
+        $('#updateGo').textContent = 'Скачиваем…';
+        try {
+          await api.update.install();
+          $('#updateText').textContent = 'Перезапуск…';
+        } catch (e) {
+          updateBanner.disabled = false;
+          $('#updateGo').textContent = 'Обновить';
+          toast('warn', e.message, 'bad');
+        }
+      });
+    }
+    api.update.onProgress(p => {
+      if (!updateBanner || updateBanner.hidden) return;
+      if (p.stage === 'download' && p.total) {
+        const pct = Math.min(100, Math.round(100 * (p.done || 0) / p.total));
+        $('#updateGo').textContent = `${pct}%`;
+      } else if (p.stage === 'apply') {
+        $('#updateGo').textContent = 'Установка…';
+      }
+    });
 
     // #mods, #accounts, #settings open straight on that page
     const first = location.hash.slice(1);

@@ -29,12 +29,20 @@ const DEFAULTS = {
 };
 
 class Settings {
-  constructor(file) {
+  constructor(file, seeded) {
     this.file = file;
     this.data = { ...DEFAULTS };
+    let fresh = false;
     try {
       Object.assign(this.data, JSON.parse(fs.readFileSync(file, 'utf8')));
-    } catch { /* first start */ }
+    } catch {
+      fresh = true;
+    }
+    if (fresh && seeded && typeof seeded === 'object') {
+      for (const [key, value] of Object.entries(seeded)) {
+        if (key in DEFAULTS) this.data[key] = value;
+      }
+    }
     normalizeAccounts(this.data);
     this.timer = null;
   }

@@ -129,39 +129,9 @@ function batEscape(s) {
 
 async function writeUninstaller(target, exe) {
   const uninstaller = path.join(target, UNINSTALL_CMD);
-  const startMenuDir = path.join(
-    process.env.APPDATA || '',
-    'Microsoft', 'Windows', 'Start Menu', 'Programs', APP_NAME,
-  );
-  const legacyStartMenuLnk = path.join(
-    process.env.APPDATA || '',
-    'Microsoft', 'Windows', 'Start Menu', 'Programs', `${APP_NAME}.lnk`,
-  );
-  const desktopLnk = path.join(app.getPath('desktop'), `${APP_NAME}.lnk`);
-  const installDir = batEscape(target);
-
   const body = [
     '@echo off',
-    'setlocal EnableExtensions',
-    `set "INSTALL_DIR=${installDir}"`,
-    'set "SILENT=0"',
-    'if /I "%~1"=="/S" set "SILENT=1"',
-    'if /I "%~1"=="/silent" set "SILENT=1"',
-    '',
-    'if "%SILENT%"=="0" (',
-    '  powershell -NoProfile -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName PresentationFramework; $r = [System.Windows.MessageBox]::Show(\'Удалить Vanilla++ с компьютера? Папка программы будет удалена. Аккаунт и моды в AppData останутся.\', \'Удаление Vanilla++\', \'YesNo\', \'Question\'); if ($r -ne \'Yes\') { exit 1 }"',
-    '  if errorlevel 1 exit /b 1',
-    ')',
-    '',
-    `rmdir /s /q "${batEscape(startMenuDir)}" 2>nul`,
-    `del /f /q "${batEscape(legacyStartMenuLnk)}" 2>nul`,
-    `del /f /q "${batEscape(desktopLnk)}" 2>nul`,
-    `reg delete "${UNINSTALL_REG}" /f >nul 2>&1`,
-    '',
-    'cd /d "%TEMP%"',
-    `start "" /min cmd /c "timeout /t 1 /nobreak >nul & rmdir /s /q \\"%INSTALL_DIR%\\""`,
-    'exit /b 0',
-    '',
+    `start "" "${batEscape(exe)}" --uninstall %*`,
   ].join('\r\n');
 
   await fsp.writeFile(uninstaller, body, 'utf8');
@@ -175,8 +145,8 @@ async function writeUninstaller(target, exe) {
   regAdd('Publisher', 'REG_SZ', PUBLISHER);
   regAdd('InstallLocation', 'REG_SZ', target);
   regAdd('DisplayIcon', 'REG_SZ', `${exe},0`);
-  regAdd('UninstallString', 'REG_SZ', `"${uninstaller}"`);
-  regAdd('QuietUninstallString', 'REG_SZ', `"${uninstaller}" /S`);
+  regAdd('UninstallString', 'REG_SZ', `"${exe}" --uninstall`);
+  regAdd('QuietUninstallString', 'REG_SZ', `"${exe}" --uninstall --silent`);
   regAdd('InstallDate', 'REG_SZ', installDate);
   regAdd('EstimatedSize', 'REG_DWORD', sizeKb);
   regAdd('NoModify', 'REG_DWORD', 1);
@@ -197,10 +167,11 @@ async function extractZip(zip, dest, onProgress) {
   onProgress?.(0.85, 'Почти готово…');
 }
 
-async function writeShortcut(link, target) {
+async function writeShortcut(link, target, args = '') {
   try {
     shell.writeShortcutLink(link, {
       target,
+      args,
       cwd: path.dirname(target),
       description: APP_NAME,
       icon: target,
@@ -211,6 +182,7 @@ async function writeShortcut(link, target) {
       `$ws = New-Object -ComObject WScript.Shell`,
       `$s = $ws.CreateShortcut('${link.replace(/'/g, "''")}')`,
       `$s.TargetPath = '${target.replace(/'/g, "''")}'`,
+      `$s.Arguments = '${String(args).replace(/'/g, "''")}'`,
       `$s.WorkingDirectory = '${path.dirname(target).replace(/'/g, "''")}'`,
       `$s.IconLocation = '${target.replace(/'/g, "''")},0'`,
       `$s.Description = '${APP_NAME}'`,
@@ -246,7 +218,7 @@ async function install({ dir, desktop, startMenu }) {
     const menu = path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', APP_NAME);
     await fsp.mkdir(menu, { recursive: true });
     await writeShortcut(path.join(menu, `${APP_NAME}.lnk`), exe);
-    await writeShortcut(path.join(menu, `Удалить ${APP_NAME}.lnk`), uninstaller);
+    await writeShortcut(path.join(menu, `Удалить ${APP_NAME}.lnk`), exe, '--uninstall');
     // старый ярлык из прошлых сборок
     try { await fsp.rm(path.join(path.dirname(menu), `${APP_NAME}.lnk`), { force: true }); } catch { /* ok */ }
   }

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'">
+<title>Vanilla++ — удаление</title>
+<link rel="stylesheet" href="../renderer/fonts.css">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+  </defs>
+</svg>
+
+<div class="stage">
+  <div class="window" id="win">
+    <div class="backdrop">
+      <img class="pano" id="pano" alt="">
+      <div class="shade"></div>
+      <div class="shade deep"></div>
+    </div>
+
+    <div class="titlebar">
+      <span class="proto" id="titleVer">Vanilla++</span>
+      <div class="controls">
+        <button class="ctl" id="min" title="Свернуть"><svg><use href="#i-minus"/></svg></button>
+        <button class="ctl close" id="close" title="Закрыть"><svg><use href="#i-close"/></svg></button>
+      </div>
+    </div>
+
+    <main class="panel glass">
+      <div class="brand">
+        <div class="logo" id="logo"></div>
+        <div>
+          <div class="caps">Удаление</div>
+          <h1>Vanilla++</h1>
+        </div>
+      </div>
+
+      <label class="field">
+        <span class="label">Папка программы</span>
+        <div class="path-row">
+          <input id="dir" readonly spellcheck="false">
+        </div>
+      </label>
+
+      <p class="note">Ярлыки и запись в списке программ будут удалены. Аккаунт и моды в AppData останутся, если не отметить пункт ниже.</p>
+
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="wipe"><span>Удалить также аккаунт, моды и файлы игры</span></label>
+      </div>
+
+      <div class="progress" id="progress" hidden>
+        <div class="bar"><div class="fill" id="fill"></div></div>
+        <div class="prog-text" id="progText">Удаляем…</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn wash" id="cancel">Отмена</button>
+        <button class="btn primary" id="go"><svg class="ic"><use href="#i-trash"/></svg><span id="goLabel">Удалить</span></button>
+      </div>
+      <div class="err" id="err"></div>
+    </main>
+  </div>
+</div>
+
+<script src="uninstall.js"></script>
+</body>
+</html>

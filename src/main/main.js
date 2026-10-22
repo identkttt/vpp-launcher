@@ -15,6 +15,8 @@ const mrpack = require('./mrpack');
 const game = require('./game');
 const { ping } = require('./ping');
 const auth = require('./auth');
+const updater = require('./updater');
+const uninstall = require('./uninstall');
 const { exists } = require('./util');
 
 const APP_ROOT = path.join(__dirname, '..', '..');
@@ -24,15 +26,18 @@ const VERSION = require('../../package.json').version;
 // VANILLA_DATA / VANILLA_GAME_DIR: keep a test run's settings and game files away from the real ones
 if (process.env.VANILLA_DATA) app.setPath('userData', path.resolve(process.env.VANILLA_DATA));
 
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-} else {
-  app.on('second-instance', () => {
-    if (!win) return;
-    if (win.isMinimized()) win.restore();
-    win.show();
-    win.focus();
-  });
+const uninstalling = process.argv.includes('--uninstall');
+if (!uninstalling) {
+  if (!app.requestSingleInstanceLock()) {
+    app.quit();
+  } else {
+    app.on('second-instance', () => {
+      if (!win) return;
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+    });
+  }
 }
 
 let win = null;
@@ -196,6 +201,10 @@ async function init() {
     background: s.customBackground && await exists(s.customBackground.file)
       ? { url: pathToFileURL(s.customBackground.file).href, name: s.customBackground.name } : null,
     state: { phase: session.phase, startedAt: session.startedAt, server: session.server },
+    update: await Promise.race([
+      updater.check(config).catch(() => null),
+      new Promise(resolve => setTimeout(() => resolve(null), 4000)),
+    ]),
   };
 }
 
@@ -599,6 +608,12 @@ function registerIpc() {
   }));
   handle('catalog:install', (source, kind, projectId, versionId) => installCatalog(source, kind, projectId, versionId));
   handle('pack:status', () => mrpack.status(gameRoot(), config));
+  handle('update:check', () => updater.check(config));
+  handle('update:install', async () => {
+    const result = await updater.install(config, p => send('update:progress', p));
+    if (result.restart) setTimeout(() => app.quit(), 400);
+    return result;
+  });
   handle('game:launch', server => launch(server));
   handle('game:cancel', () => session.abort?.abort());
   handle('game:stop', stopGame);
@@ -636,7 +651,21 @@ function registerIpc() {
 
 app.whenReady().then(() => {
   system.readInstalled();
-  settings = new Settings(path.join(app.getPath('userData'), 'settings.json'));
+  settings = new Settings(path.join(app.getPath('userData'), 'settings.json'), config.defaults);
+  if (uninstalling) {
+    const root = path.join(__dirname, '..', '..');
+    const info = {
+      gameDir: gameRoot(),
+      sakura: pathToFileURL(path.join(root, 'src', 'setup', 'assets', 'backdrop.jpg')).href,
+      logo: pathToFileURL(path.join(root, 'src', 'renderer', 'assets', 'logo.png')).href,
+    };
+    if (process.argv.includes('--silent')) {
+      uninstall.run({ wipe: false, gameDir: info.gameDir }).catch(() => app.quit());
+      return;
+    }
+    uninstall.open(info);
+    return;
+  }
   registerIpc();
   createWindow();
   mods.emptyTrash(gameRoot(), f => shell.trashItem(f)).catch(() => {});

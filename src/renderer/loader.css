@@ -350,6 +350,14 @@ svg.ic, .ic svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
 }
 
 .play-row { margin-top: 26px; display: flex; gap: 8px; }
+.update-banner {
+  margin-top: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 292px; padding: 8px 12px; border-radius: 12px;
+  color: rgb(255 255 255 / .88); text-align: left;
+}
+.update-banner[hidden] { display: none; }
+.update-go { color: rgb(var(--accent)); font-weight: 600; white-space: nowrap; }
 .play {
   position: relative; overflow: hidden;
   width: 236px; height: 48px;
