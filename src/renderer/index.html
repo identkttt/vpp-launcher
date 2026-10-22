@@ -98,7 +98,7 @@
       <div class="hair"></div>
       <button class="profile" id="sideProfile" data-page="accounts" title="Аккаунт">
         <span class="side-avatar" id="sideAvatar"></span>
-        <span class="who"><b id="sideName">-</b><small id="sideSub">Vanilla++ · 26.2</small></span>
+        <span class="who"><b id="sideName">-</b><small id="sideSub">Офлайн</small></span>
       </button>
     </aside>
 
@@ -318,6 +318,7 @@
           </label>
           <button class="btn wash" data-act="folder-logs"><svg class="ic"><use href="#i-folder"/></svg>Папка</button>
           <button class="btn wash" id="logOpenExt"><svg class="ic"><use href="#i-file"/></svg>В редакторе</button>
+          <button class="btn wash" id="logCopy"><svg class="ic"><use href="#i-copy"/></svg>Копировать</button>
         </div>
         <div class="hint" id="logMeta"><svg class="ic"><use href="#i-log"/></svg><span>Лог игры · latest.log</span></div>
         <div class="log-view" id="logView"></div>
@@ -377,10 +378,24 @@
               <div class="group-label st" style="--i:1">Внешний вид</div>
               <div class="set st" style="--i:2">
                 <div class="set-col">
+                  <div class="set-name">Режим темы</div>
+                  <div class="segmented" id="themeMode">
+                    <div class="seg-wash"></div>
+                    <button data-v="dark" class="on">Тёмная</button>
+                    <button data-v="light">Светлая</button>
+                  </div>
+                </div>
+              </div>
+              <div class="set st" style="--i:2">
+                <div class="set-col">
                   <div class="set-name">Цвет <span class="set-sub inline-sub" id="themeName">Сакура</span></div>
                   <div class="swatches" id="swatches"></div>
                   <label class="color-pick">Свой<input type="color" id="accentColor" value="#f4a8be" aria-label="Свой цвет"></label>
                 </div>
+              </div>
+              <div class="set st" style="--i:3">
+                <div><div class="set-name">Цвет под фон</div><div class="set-sub">Подбирать акцентный цвет под картинку</div></div>
+                <button class="switch" data-key="autoAccent"></button>
               </div>
               <div class="set st" style="--i:2">
                 <div class="set-col">

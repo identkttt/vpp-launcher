@@ -904,6 +904,31 @@
       status('logs', 'warn', e.message, 'warn');
     }
   });
+  $('#logCopy').addEventListener('click', async () => {
+    try {
+      const q = logState.filter.trim().toLowerCase();
+      const lines = logState.text ? logState.text.split('\n') : [];
+      const textToCopy = q ? lines.filter(line => line.toLowerCase().includes(q)).join('\n') : (logState.text || '');
+      if (!textToCopy) {
+        status('logs', 'warn', 'Лог пуст', 'warn');
+        return;
+      }
+      await navigator.clipboard.writeText(textToCopy);
+      status('logs', 'check', q ? 'Отфильтрованные строки скопированы' : 'Лог скопирован в буфер', 'good');
+    } catch {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = logState.text || '';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        status('logs', 'check', 'Лог скопирован в буфер', 'good');
+      } catch (e) {
+        status('logs', 'warn', 'Не удалось скопировать', 'warn');
+      }
+    }
+  });
   $('#logView').addEventListener('scroll', () => {
     const view = $('#logView');
     logState.stickBottom = view.scrollHeight - view.scrollTop - view.clientHeight < 48;
@@ -1353,7 +1378,7 @@
     box.innerHTML = '<span class="face round" style="--s:30px"></span>';
     paintFace(box.firstElementChild, state.nick || 'Steve', acc?.skinUrl);
     $('#sideName').textContent = state.nick || 'Без аккаунта';
-    $('#sideSub').textContent = acc ? `${kindOf(acc)} · ${buildText}` : buildText;
+    $('#sideSub').textContent = kindOf(acc);
     $$('[data-nick-upper]').forEach(el => el.textContent = state.nick ? state.nick.toUpperCase() : 'ИГРОК');
   }
 
@@ -1731,6 +1756,7 @@
     bundledJava: on => on ? 'Java возьмём у Mojang' : 'Укажите путь к своей Java 25',
     particles: on => on ? 'Частицы включены' : 'Частицы выключены',
     fullscreen: on => on ? 'Игра запустится на весь экран' : 'Игра запустится в окне',
+    autoAccent: on => on ? 'Цвет подбирается под фон' : 'Ручной выбор цвета',
   };
 
   function setSwitch(key, on) {
@@ -1738,6 +1764,10 @@
     if (sw) sw.classList.toggle('on', on);
     if (key === 'bundledJava') $('#javaPathRow').classList.toggle('shut', on);
     if (key === 'particles') canvas.classList.toggle('off', !on);
+    if (key === 'autoAccent') {
+      state.settings.autoAccent = on;
+      if (on && picked) applyBackgroundAccent(picked, true);
+    }
   }
 
   $$('.switch[data-key]').forEach(sw => sw.addEventListener('click', () => {
@@ -1849,13 +1879,107 @@
     }
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   }
-  function computeSmoke(rgb) {
-    if (rgb[0] === 244 && rgb[1] === 168 && rgb[2] === 190) return [22, 12, 16];
+  let currentThemeMode = 'dark';
+  function computeSmoke(rgb, isLight = (currentThemeMode === 'light')) {
+    const [h, s, l] = rgbToHsl(...rgb);
+    if (isLight) {
+      if (s < 0.05) return [248, 248, 250];
+      const targetSat = Math.min(0.25, Math.max(0.08, s * 0.25));
+      const targetLight = 0.95;
+      return hslToRgb(h, targetSat, targetLight);
+    } else {
+      if (rgb[0] === 244 && rgb[1] === 168 && rgb[2] === 190) return [22, 12, 16];
+      if (s < 0.05) return [17, 17, 19];
+      const targetSat = Math.min(0.32, Math.max(0.18, s * 0.38));
+      const targetLight = 0.068;
+      return hslToRgb(h, targetSat, targetLight);
+    }
+  }
+
+  function applyThemeMode(mode, instant) {
+    currentThemeMode = mode === 'light' ? 'light' : 'dark';
+    state.settings.themeMode = currentThemeMode;
+    document.documentElement.classList.toggle('light', currentThemeMode === 'light');
+    const seg = $('#themeMode');
+    if (seg) setSeg(seg, currentThemeMode);
+    setAccent(accentNow, instant);
+  }
+  const themeModeSeg = $('#themeMode');
+  if (themeModeSeg) {
+    themeModeSeg.addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      const mode = b.dataset.v;
+      applyThemeMode(mode, false);
+      save({ themeMode: mode });
+      status('settings', 'palette', `Тема - ${mode === 'light' ? 'светлая' : 'тёмная'}`, 'good');
+    });
+  }
+
+  function extractImageAccent(url) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const cvs = document.createElement('canvas');
+          const ctx = cvs.getContext('2d');
+          const w = Math.min(80, img.naturalWidth || 80);
+          const h = Math.min(80, img.naturalHeight || 80);
+          cvs.width = w; cvs.height = h;
+          ctx.drawImage(img, 0, 0, w, h);
+          const data = ctx.getImageData(0, 0, w, h).data;
+          let best = null, maxScore = -1, rSum = 0, gSum = 0, bSum = 0, count = 0;
+          for (let i = 0; i < data.length; i += 16) {
+            const r = data[i], g = data[i + 1], b = data[i + 2];
+            const [hue, sat, lit] = rgbToHsl(r, g, b);
+            if (sat > 0.15 && lit > 0.25 && lit < 0.85) {
+              const score = sat * (1 - Math.abs(lit - 0.55));
+              if (score > maxScore) { maxScore = score; best = [r, g, b]; }
+              rSum += r; gSum += g; bSum += b; count++;
+            }
+          }
+          if (best) resolve(best);
+          else if (count > 0) resolve([Math.round(rSum / count), Math.round(gSum / count), Math.round(bSum / count)]);
+          else resolve([244, 168, 190]);
+        } catch { resolve([244, 168, 190]); }
+      };
+      img.onerror = () => resolve([244, 168, 190]);
+      img.src = url;
+    });
+  }
+
+  const BG_ACCENTS = {
+    sakura: [244, 168, 190],
+    end: [184, 137, 230],
+  };
+
+  async function applyBackgroundAccent(kind, animate) {
+    let rgb = BG_ACCENTS[kind];
+    if (kind === 'custom' && customBg) {
+      rgb = await extractImageAccent(customBg.url);
+    }
+    if (!rgb) rgb = BG_ACCENTS.sakura;
+    pickCustom(rgb, !animate);
+    save({ accent: rgb, theme: null });
+  }
+
+  function computeAccentText(rgb, isLight = (currentThemeMode === 'light')) {
+    if (!isLight) {
+      return `color-mix(in srgb, rgb(${rgb.join(' ')}) 65%, white)`;
+    }
     const [h, s] = rgbToHsl(...rgb);
-    if (s < 0.05) return [17, 17, 19];
-    const targetSat = Math.min(0.32, Math.max(0.18, s * 0.38));
-    const targetLight = 0.068;
-    return hslToRgb(h, targetSat, targetLight);
+    const isYellowGreen = h >= 35 && h <= 165;
+    const targetL = isYellowGreen ? 0.25 : 0.32;
+    const targetS = Math.min(0.85, Math.max(0.55, s * 0.9));
+    const darkRgb = hslToRgb(h, targetS, targetL);
+    return `rgb(${darkRgb.join(' ')})`;
+  }
+
+  function computeBtnTextColor(rgb, isLight = (currentThemeMode === 'light')) {
+    if (!isLight) return '#ffffff';
+    const lum = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+    return lum > 140 ? '#0e1411' : '#ffffff';
   }
 
   let accentNow = [244, 168, 190], smokeNow = [22, 12, 16], accentAnim;
@@ -1871,6 +1995,8 @@
       smokeNow = fromSmoke.map((c, i) => Math.round(c + (toSmoke[i] - c) * e));
       document.documentElement.style.setProperty('--accent', accentNow.join(' '));
       document.documentElement.style.setProperty('--smoke', smokeNow.join(' '));
+      document.documentElement.style.setProperty('--accent-text', computeAccentText(accentNow));
+      document.documentElement.style.setProperty('--accent-btn-text', computeBtnTextColor(accentNow));
       if (t < 1) accentAnim = requestAnimationFrame(step);
     })(start);
   }
@@ -1901,6 +2027,10 @@
     b.title = name;
     b.style.background = `rgb(${rgb.join(' ')})`;
     b.onclick = () => {
+      if (state.settings?.autoAccent) {
+        setSwitch('autoAccent', false);
+        save({ autoAccent: false });
+      }
       pickTheme(i);
       save({ theme: i, accent: null });
       status('settings', 'palette', `Цвет «${name}»`, 'good');
@@ -1910,6 +2040,10 @@
   $('#accentColor').addEventListener('input', () => {
     const rgb = hexRgb($('#accentColor').value);
     if (rgb.some(n => Number.isNaN(n))) return;
+    if (state.settings?.autoAccent) {
+      setSwitch('autoAccent', false);
+      save({ autoAccent: false });
+    }
     pickCustom(rgb, true);
     save({ accent: rgb });
   });
@@ -1974,6 +2108,9 @@
       $('.badge', t)?.remove();
       if (on) t.insertAdjacentHTML('beforeend', `<span class="badge${fade ? ' pop' : ''}">${icon('check')}</span>`);
     });
+    if (state.settings?.autoAccent) {
+      applyBackgroundAccent(kind, fade);
+    }
   }
 
   async function loadBackground(file) {
@@ -1988,6 +2125,9 @@
     pickBackground('custom', true);
     const img = new Image();
     img.onload = () => {
+      if (state.settings?.autoAccent) {
+        applyBackgroundAccent('custom', true);
+      }
       const small = img.naturalWidth < 1600 || img.naturalHeight < 900;
       status(state.page, 'image', small
         ? `Фон заменён, но картинка маленькая (${img.naturalWidth}×${img.naturalHeight}) - лучше от 1920×1080`
@@ -2314,6 +2454,8 @@
     setSwitch('bundledJava', boot.settings.javaMode !== 'custom');
     setSwitch('particles', boot.settings.particles !== false);
     setSwitch('fullscreen', !!boot.settings.fullscreen);
+    setSwitch('autoAccent', !!boot.settings.autoAccent);
+    applyThemeMode(boot.settings.themeMode || 'dark', true);
     $('#javaPath').value = boot.settings.javaPath || '';
     $('#jvmArgs').value = boot.settings.jvmArgs || '';
     $('#resW').value = boot.settings.width || 1280;

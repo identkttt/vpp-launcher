@@ -87,8 +87,14 @@ svg.ic, .ic svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
 .shade {
   position: absolute; inset: 0;
   background:
-    linear-gradient(90deg, rgb(5 6 8 / .80) 0%, rgb(5 6 8 / .62) 30%, rgb(5 6 8 / .22) 58%, rgb(5 6 8 / 0) 78%),
-    linear-gradient(0deg, rgb(5 6 8 / .55) 0%, rgb(5 6 8 / 0) 32%);
+    linear-gradient(90deg,
+      rgb(5 6 8 / .88) 0%,
+      rgb(5 6 8 / .80) 35%,
+      rgb(5 6 8 / .62) 55%,
+      rgb(5 6 8 / .36) 72%,
+      rgb(5 6 8 / .12) 86%,
+      rgb(5 6 8 / 0) 96%),
+    linear-gradient(0deg, rgb(5 6 8 / .65) 0%, rgb(5 6 8 / 0) 38%);
 }
 .shade.deep { background: rgb(var(--smoke) / .42); opacity: 0; transition: opacity .5s var(--ease); }
 .window.paned .shade.deep { opacity: 1; }
@@ -335,8 +341,13 @@ svg.ic, .ic svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
   margin-top: 10px;
   font-size: 33px; font-weight: 500; line-height: 1.18; letter-spacing: -.005em;
   color: rgb(255 255 255 / .97);
+  text-shadow: 0 2px 14px rgb(0 0 0 / .45);
 }
-.hero .body { margin-top: 12px; font-size: 13px; color: rgb(255 255 255 / .62); }
+.hero .caps { text-shadow: 0 1px 8px rgb(0 0 0 / .35); }
+.hero .body {
+  margin-top: 12px; font-size: 13px; color: rgb(255 255 255 / .68);
+  text-shadow: 0 1px 8px rgb(0 0 0 / .35);
+}
 
 .play-row { margin-top: 26px; display: flex; gap: 8px; }
 .play {
@@ -594,12 +605,13 @@ svg.ic, .ic svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
 }
 .slider .zone {
   position: absolute; top: 14px; height: 14px; border-radius: 7px;
-  background: rgb(127 221 144 / .08);
+  background: rgb(127 221 144 / .14);
+  box-shadow: 0 0 0 1px rgb(127 221 144 / .25) inset;
 }
 .slider .zone span {
   position: absolute; left: 50%; bottom: 17px; transform: translateX(-50%);
   font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
-  color: rgb(127 221 144 / .6);
+  color: #8fe89e;
 }
 .slider .thumb {
   position: absolute; top: 12px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%;
@@ -841,10 +853,13 @@ body.app .window { left: 0; top: 0; transform: none; border-radius: 0; box-shado
   font-size: 12px; line-height: 1.45;
   white-space: pre-wrap; word-break: break-word;
   color: rgb(220 220 224);
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
 }
 .log-view::-webkit-scrollbar { width: 10px; }
 .log-view::-webkit-scrollbar-thumb { background: rgb(255 255 255 / .1); border-radius: 5px; }
-.log-line { display: block; }
+.log-line { display: block; user-select: text; -webkit-user-select: text; }
 .log-line .t { color: rgb(255 255 255 / .38); }
 .log-line .th { color: rgb(170 196 220); }
 .log-line .lv { font-weight: 600; }
@@ -961,3 +976,362 @@ body.app .window { left: 0; top: 0; transform: none; border-radius: 0; box-shado
 .auth-fine { text-align: center; font-size: 10.5px; color: var(--faint); }
 
 .page[data-page="profile"] .add-row { margin-top: 0; }
+
+/* ------------------------------------------------------------------ light theme */
+
+:root.light {
+  --bright: rgb(22 22 26 / .92);
+  --on: rgb(32 32 38 / .85);
+  --soft: rgb(55 55 68 / .70);
+  --dim: rgb(75 75 90 / .55);
+  --faint: rgb(100 100 120 / .40);
+  --wash: rgb(0 0 0 / .045);
+  --wash-hover: rgb(0 0 0 / .075);
+  --hair: rgb(0 0 0 / .08);
+
+  --accent-text: color-mix(in srgb, rgb(var(--accent)) 70%, #151518);
+  --knob: #ffffff;
+  --glass-a: .82;
+}
+
+:root.light body {
+  color: var(--bright);
+}
+
+:root.light .stage {
+  background:
+    radial-gradient(1200px 700px at 30% 20%, rgb(var(--accent) / .12), transparent 60%),
+    #e2e4e9;
+}
+
+:root.light .window {
+  box-shadow: 0 30px 90px rgb(0 0 0 / .16), 0 0 0 1px rgb(0 0 0 / .08);
+}
+
+:root.light .glass {
+  backdrop-filter: blur(30px) saturate(1.2);
+  -webkit-backdrop-filter: blur(30px) saturate(1.2);
+  box-shadow: 0 12px 36px rgb(0 0 0 / .08), 0 0 0 1px rgb(255 255 255 / .6) inset;
+}
+
+:root.light .logo {
+  background: linear-gradient(145deg, var(--accent-text), rgb(var(--accent)));
+  background-blend-mode: normal;
+  -webkit-mask: url(assets/logo.png) center / contain no-repeat;
+          mask: url(assets/logo.png) center / contain no-repeat;
+  filter: drop-shadow(0 2px 8px rgb(var(--accent) / .45));
+}
+
+:root.light .logo:hover {
+  filter: drop-shadow(0 3px 12px rgb(var(--accent) / .65));
+}
+
+:root.light .auth-logo {
+  background: linear-gradient(145deg, var(--accent-text), rgb(var(--accent)));
+  background-blend-mode: normal;
+  -webkit-mask: url(assets/logo.png) center / contain no-repeat;
+          mask: url(assets/logo.png) center / contain no-repeat;
+  filter: drop-shadow(0 2px 10px rgb(var(--accent) / .45));
+}
+
+:root.light .shade {
+  background:
+    linear-gradient(90deg,
+      rgb(255 255 255 / .88) 0%,
+      rgb(255 255 255 / .82) 35%,
+      rgb(255 255 255 / .65) 55%,
+      rgb(255 255 255 / .38) 72%,
+      rgb(255 255 255 / .12) 86%,
+      rgb(255 255 255 / 0) 96%),
+    linear-gradient(0deg, rgb(255 255 255 / .65) 0%, rgb(255 255 255 / 0) 38%);
+}
+
+:root.light .shade.deep {
+  background: rgb(var(--smoke) / .55);
+}
+
+:root.light .hero h1 {
+  color: var(--bright);
+  text-shadow: 0 1px 12px rgb(255 255 255 / .85);
+}
+
+:root.light .hero .caps {
+  color: var(--accent-text);
+  text-shadow: 0 1px 8px rgb(255 255 255 / .7);
+}
+
+:root.light .hero .body {
+  color: var(--soft);
+  text-shadow: 0 1px 8px rgb(255 255 255 / .7);
+}
+
+:root.light .launch-line {
+  color: var(--soft);
+}
+
+:root.light .fine {
+  color: var(--dim);
+}
+
+:root.light .well {
+  background: rgb(0 0 0 / .04);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .06) inset;
+}
+
+:root.light .well:focus-within {
+  background: color-mix(in srgb, rgb(var(--accent)) 10%, rgb(0 0 0 / .02));
+  box-shadow: 0 0 0 1.5px rgb(var(--accent)) inset;
+}
+
+:root.light .btn.wash {
+  background: rgb(0 0 0 / .055);
+  color: var(--bright);
+}
+
+:root.light .btn.wash:hover {
+  background: rgb(0 0 0 / .095);
+}
+
+:root.light .btn.primary {
+  background: rgb(var(--accent));
+  color: var(--accent-btn-text, #ffffff);
+  box-shadow: 0 4px 14px rgb(var(--accent) / .35);
+  text-shadow: none;
+}
+:root.light .btn.primary:hover {
+  background: color-mix(in srgb, rgb(var(--accent)) 85%, black);
+}
+:root.light .btn.primary .ic {
+  fill: currentColor;
+}
+
+:root.light .nav .ic,
+:root.light .pane-head .ic,
+:root.light .card-head .ic,
+:root.light .btn.sq .ic,
+:root.light .chip .ic,
+:root.light .icon-btn.tiny,
+:root.light .sub-card .sub-ic {
+  color: var(--accent-text);
+}
+
+:root.light .pill.accent {
+  background: color-mix(in srgb, rgb(var(--accent)) 25%, white);
+  box-shadow: 0 0 0 1px rgb(var(--accent) / .4) inset;
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+:root.light .ctl {
+  background: rgb(var(--smoke) / .7);
+  color: var(--soft);
+}
+
+:root.light .ctl:hover {
+  background: rgb(0 0 0 / .08);
+  color: var(--bright);
+}
+
+:root.light .ctl.close:hover {
+  background: rgb(221 127 129 / .9);
+  color: #fff;
+}
+
+:root.light .switch {
+  background: rgb(0 0 0 / .15);
+}
+
+:root.light .switch::after {
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / .25);
+  opacity: 1;
+}
+
+:root.light .switch.on {
+  background: rgb(var(--accent));
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .15) inset;
+}
+
+:root.light .ram {
+  background: rgb(0 0 0 / .03);
+  border-radius: 12px;
+  padding: 10px 14px 14px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .06);
+}
+
+:root.light .ram-value {
+  color: var(--soft);
+}
+
+:root.light .ram-value b {
+  color: var(--accent-text);
+}
+
+:root.light .slider .track {
+  background: rgb(0 0 0 / .12);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .08) inset;
+}
+
+:root.light .slider .track-fill {
+  background: linear-gradient(90deg, var(--accent-text), rgb(var(--accent)));
+  box-shadow: 0 1px 3px rgb(0 0 0 / .15);
+}
+
+:root.light .slider .reserved {
+  background: repeating-linear-gradient(135deg, rgb(0 0 0 / .14) 0 3px, transparent 3px 6px);
+}
+
+:root.light .slider .zone {
+  background: rgb(22 163 74 / .18);
+  box-shadow: 0 0 0 1px rgb(22 163 74 / .35) inset;
+}
+
+:root.light .slider .zone span {
+  color: #15803d;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgb(255 255 255 / .9);
+}
+
+:root.light .slider .thumb {
+  background: #ffffff;
+  border: 2px solid var(--accent-text);
+  box-shadow: 0 2px 8px rgb(0 0 0 / .22);
+}
+
+:root.light .slider:hover .thumb, :root.light .slider.drag .thumb {
+  box-shadow: 0 2px 8px rgb(0 0 0 / .25), 0 0 0 6px rgb(var(--accent) / .22);
+}
+
+:root.light .ticks span {
+  color: var(--soft);
+  font-weight: 600;
+}
+
+:root.light .presets button {
+  background: rgb(0 0 0 / .05);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .08);
+  color: var(--on);
+  font-weight: 500;
+}
+
+:root.light .presets button:hover {
+  background: rgb(0 0 0 / .09);
+  color: var(--bright);
+}
+
+:root.light .presets button.on {
+  background: color-mix(in srgb, rgb(var(--accent)) 25%, white);
+  box-shadow: 0 0 0 1.5px var(--accent-text);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+:root.light .ram-info {
+  color: var(--soft);
+  font-weight: 500;
+}
+
+:root.light .ram-info svg {
+  fill: var(--soft);
+}
+
+:root.light .ram-info.warn {
+  color: #b45309;
+}
+
+:root.light .ram-info.warn svg {
+  fill: #b45309;
+}
+
+:root.light .segmented {
+  background: rgb(0 0 0 / .05);
+}
+
+:root.light .seg-wash {
+  background: color-mix(in srgb, rgb(var(--accent)) 25%, white);
+  box-shadow: 0 0 0 1px rgb(var(--accent) / .35) inset;
+}
+
+:root.light .set + .set {
+  border-top-color: rgb(0 0 0 / .05);
+}
+
+:root.light .scroll::-webkit-scrollbar-thumb {
+  background: rgb(0 0 0 / .14);
+}
+
+:root.light .scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(0 0 0 / .22);
+}
+
+:root.light .row:hover {
+  background: rgb(0 0 0 / .04);
+}
+
+:root.light .row.picked {
+  background: color-mix(in srgb, rgb(var(--accent)) 16%, rgb(0 0 0 / .03));
+}
+
+:root.light .status .undo {
+  color: var(--accent-text);
+}
+
+:root.light .chip {
+  background: rgb(var(--smoke) / .8);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .06);
+}
+
+:root.light .chip:hover {
+  background: color-mix(in srgb, rgb(var(--smoke)) 85%, black);
+}
+
+:root.light .btn.glass:hover {
+  background: color-mix(in srgb, rgb(var(--smoke)) 85%, black);
+}
+
+:root.light .play.running, :root.light .play.locked {
+  background: rgb(var(--smoke) / .9);
+  color: var(--bright);
+}
+
+:root.light .color-pick {
+  background: rgb(0 0 0 / .05);
+  color: var(--bright);
+}
+
+:root.light .font-picks button {
+  background: rgb(0 0 0 / .05);
+  color: var(--on);
+}
+
+:root.light .font-picks button.on {
+  background: rgb(var(--accent) / .25);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+:root.light .nav .count {
+  background: rgb(0 0 0 / .07);
+  color: var(--dim);
+}
+
+:root.light .nav.on .count {
+  background: rgb(var(--accent) / .22);
+  color: var(--accent-text);
+}
+
+:root.light .log-view {
+  background: rgb(0 0 0 / .05);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07) inset;
+  color: #1a1a1f;
+}
+
+:root.light .log-line .t { color: rgb(0 0 0 / .45); }
+:root.light .log-line .th { color: #1e40af; }
+:root.light .log-line .lv-info, :root.light .log-line .lv-debug { color: #0284c7; }
+:root.light .log-line .lv-warn { color: #b45309; }
+:root.light .log-line .lv-error, :root.light .log-line .lv-fatal { color: #dc2626; }
+:root.light .log-line .lv-trace { color: rgb(0 0 0 / .45); }
+:root.light .log-line.level-error, :root.light .log-line.level-fatal { background: rgb(220 38 38 / .09); }
+:root.light .log-line.level-warn { background: rgb(217 119 6 / .08); }
+
